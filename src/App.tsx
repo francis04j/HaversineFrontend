@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { SearchFilters, type SearchFilters as Filters } from './components/SearchFilters';
+import { SearchFilters, SearchFilters as SearchFiltersType } from './components/SearchFilters';
 import { PropertyList } from './components/PropertyList';
+import { UploadProperty } from './pages/UploadProperty';
+import { UploadAmenity } from './pages/UploadAmenity';
 import { Property } from './types/property';
-import { Search } from 'lucide-react';
+import { Search, Plus, Building2 } from 'lucide-react';
 import { getProperties, searchProperties } from './services/api';
+import styles from './styles/components/Input.module.css';
 
 function App() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'list' | 'uploadProperty' | 'uploadAmenity'>('list');
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -26,7 +30,7 @@ function App() {
     fetchProperties();
   }, []);
 
-  const handleFilterChange = async (filters: Filters) => {
+  const handleFilterChange = async (filters: SearchFiltersType) => {
     setLoading(true);
     try {
       const filteredProperties = await searchProperties(filters);
@@ -39,38 +43,67 @@ function App() {
     }
   };
 
+  const renderView = () => {
+    switch (currentView) {
+      case 'uploadProperty':
+        return <UploadProperty />;
+      case 'uploadAmenity':
+        return <UploadAmenity />;
+      default:
+        return (
+          <div className="space-y-8">
+            <SearchFilters onFilterChange={handleFilterChange} />
+            
+            <div className="bg-white rounded-xl p-6">
+              {error ? (
+                <div className="text-red-600 text-center py-4">{error}</div>
+              ) : loading ? (
+                <div className="text-center py-4">Loading properties...</div>
+              ) : (
+                <>
+                  <h2 className="text-xl font-semibold text-secondary mb-6">
+                    {properties.length} Properties Found
+                  </h2>
+                  <PropertyList properties={properties} />
+                </>
+              )}
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-neutral-50">
       <header className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
+            <div className="flex items-center cursor-pointer" onClick={() => setCurrentView('list')}>
               <Search className="h-8 w-8 text-primary" />
               <h1 className="ml-2 text-2xl font-bold text-primary">RentHub</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setCurrentView('uploadAmenity')}
+                className={`${styles.searchButton} !bg-secondary hover:!bg-secondary-light`}
+              >
+                <Building2 className="w-5 h-5 mr-2" />
+                {currentView === 'uploadAmenity' ? 'View Properties' : 'Add Amenity'}
+              </button>
+              <button
+                onClick={() => setCurrentView('uploadProperty')}
+                className={styles.searchButton}
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                {currentView === 'uploadProperty' ? 'View Properties' : 'Add Property'}
+              </button>
             </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="space-y-8">
-          <SearchFilters onFilterChange={handleFilterChange} />
-          
-          <div className="bg-white rounded-xl p-6">
-            {error ? (
-              <div className="text-red-600 text-center py-4">{error}</div>
-            ) : loading ? (
-              <div className="text-center py-4">Loading properties...</div>
-            ) : (
-              <>
-                <h2 className="text-xl font-semibold text-secondary mb-6">
-                  {properties.length} Properties Found
-                </h2>
-                <PropertyList properties={properties} />
-              </>
-            )}
-          </div>
-        </div>
+        {renderView()}
       </main>
     </div>
   );

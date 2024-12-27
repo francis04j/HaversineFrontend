@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
+import styles from '../styles/components/Input.module.css'
 
 interface AmenityInputProps {
   onAdd: (amenity: string, distance: number) => void;
@@ -28,7 +29,7 @@ export function AmenityInput({ onAdd, onRemove, customAmenities }: AmenityInputP
           value={newAmenity}
           onChange={(e) => setNewAmenity(e.target.value)}
           placeholder="Enter amenity name"
-          className="flex-1 rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
+          className={styles.input}
         />
         <input
           type="number"
@@ -37,7 +38,7 @@ export function AmenityInput({ onAdd, onRemove, customAmenities }: AmenityInputP
           placeholder="Distance (km)"
           step="0.1"
           min="0"
-          className="w-32 rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
+          className="w-32 px-1 rounded-lg border-2 border-neutral-300 focus:border-primary focus:ring-primary"
         />
         <button
           type="submit"

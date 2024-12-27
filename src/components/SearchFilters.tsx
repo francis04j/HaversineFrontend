@@ -2,13 +2,18 @@ import React from 'react';
 import { FurnishedType, LetType, PropertyType, Amenity } from '../types/property';
 import { Search, Home, Bed, Building, Sofa, Clock, MapPin, DumbbellIcon, Plus } from 'lucide-react';
 import { AmenityInput } from './AmenityInput';
+import styles from '../styles/components/Input.module.css';
+import { PriceRangeInputs } from './PriceRangeInputs';
+import { LocationSearch } from './LocationSearch';
 
 interface SearchFiltersProps {
   onFilterChange: (filters: SearchFilters) => void;
 }
 
 export interface SearchFilters {
-  priceRange: [number, number];
+  location: string;
+  fromPrice: number;
+  toPrice: number;
   bedrooms: number;
   propertyType: PropertyType;
   furnishedType: FurnishedType;
@@ -20,7 +25,9 @@ export interface SearchFilters {
 
 export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   const [filters, setFilters] = React.useState<SearchFilters>({
-    priceRange: [0, 5000],
+    location: '',
+    fromPrice: 500,
+    toPrice: 5000,
     bedrooms: 1,
     propertyType: 'any' as PropertyType,
     furnishedType: 'any',
@@ -58,30 +65,24 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   return (
     <div className="bg-white rounded-xl shadow-search hover:shadow-search-hover transition-shadow p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <div className="space-y-2">
-          <label className="flex items-center text-sm font-medium text-secondary">
-            <Search className="w-4 h-4 mr-2" />
-            Price Range (£)
-          </label>
-          <div className="flex space-x-2">
-            <input
-              type="number"
-              value={filters.priceRange[0]}
-              onChange={(e) => handleChange('priceRange', [parseInt(e.target.value), filters.priceRange[1]])}
-              className="w-full rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
-            />
-            <span className="text-secondary">to</span>
-            <input
-              type="number"
-              value={filters.priceRange[1]}
-              onChange={(e) => handleChange('priceRange', [filters.priceRange[0], parseInt(e.target.value)])}
-              className="w-full rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
-            />
-          </div>
-        </div>
+        
+      <LocationSearch fieldName='Location'
+          value={filters.location}
+          onChange={(value) => handleChange('location', value)}
+        />
+        
+        
+      <PriceRangeInputs
+          fromPrice={filters.fromPrice}
+          toPrice={filters.toPrice}
+          onChange={(fromPrice, toPrice) => {
+            handleChange('fromPrice', fromPrice);
+            handleChange('toPrice', toPrice);
+          }}
+        />
 
         <div className="space-y-2">
-          <label className="flex items-center text-sm font-medium text-secondary">
+          <label className="flex items-center text-sm font-bold text-secondary">
             <Bed className="w-4 h-4 mr-2" />
             Bedrooms
           </label>
@@ -90,19 +91,19 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
             min="1"
             value={filters.bedrooms}
             onChange={(e) => handleChange('bedrooms', parseInt(e.target.value))}
-            className="w-full rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
+            className={styles.input}
           />
         </div>
 
         <div className="space-y-2">
-          <label className="flex items-center text-sm font-medium text-secondary">
+          <label className="flex items-center text-sm font-bold text-secondary">
             <Home className="w-4 h-4 mr-2" />
             Property Type
           </label>
           <select
             value={filters.propertyType}
             onChange={(e) => handleChange('propertyType', e.target.value)}
-            className="w-full rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
+            className={styles.input}
           >
             <option value="any">Any</option>
             <option value="detached">Detached</option>
@@ -114,14 +115,14 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="flex items-center text-sm font-medium text-secondary">
+          <label className="flex items-center text-sm font-bold text-secondary">
             <Sofa className="w-4 h-4 mr-2" />
             Furnished Type
           </label>
           <select
             value={filters.furnishedType}
             onChange={(e) => handleChange('furnishedType', e.target.value)}
-            className="w-full rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
+            className={styles.input}
           >
             <option value="any">Any</option>
             <option value="furnished">Furnished</option>
@@ -130,14 +131,14 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="flex items-center text-sm font-medium text-secondary">
+          <label className="flex items-center text-sm font-bold text-secondary">
             <Clock className="w-4 h-4 mr-2" />
             Let Type
           </label>
           <select
             value={filters.letType}
             onChange={(e) => handleChange('letType', e.target.value)}
-            className="w-full rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
+            className={styles.input}
           >
             <option value="any">Any</option>
             <option value="long_term">Long Term</option>
@@ -146,7 +147,7 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="flex items-center text-sm font-medium text-secondary">
+          <label className="flex items-center text-sm font-bold text-secondary">
             <MapPin className="w-4 h-4 mr-2" />
             Office Location
           </label>
@@ -154,15 +155,21 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
             type="text"
             value={filters.officeLocation}
             onChange={(e) => handleChange('officeLocation', e.target.value)}
-            className="w-full rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
+            className={styles.input}
             placeholder="Enter location..."
           />
         </div>
+
+        <LocationSearch fieldName='Office Location'
+          value={filters.officeLocation}
+          onChange={(value) => handleChange('officeLocation', value)}
+        />
+        
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <label className="flex items-center text-sm font-medium text-secondary">
+          <label className="flex items-center text-sm font-bold text-secondary">
             <DumbbellIcon className="w-4 h-4 mr-2" />
             Nearby Amenities
           </label>
@@ -187,7 +194,7 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="flex items-center text-sm font-medium text-secondary">
+          <label className="flex items-center text-sm font-bold text-secondary">
             <Plus className="w-4 h-4 mr-2" />
             Enter your preferred nearby Amenities
           </label>
@@ -201,7 +208,7 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
         <div className="flex justify-center mt-6">
           <button
             onClick={handleSearch}
-            className="inline-flex items-center px-6 py-3 rounded-lg text-base font-medium text-white bg-primary hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            className="inline-flex items-center px-6 py-3 rounded-lg text-base font-bold text-white bg-primary hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           >
             <Search className="w-5 h-5 mr-2" />
             Search Properties

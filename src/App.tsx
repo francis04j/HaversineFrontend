@@ -3,6 +3,7 @@ import { SearchFilters, SearchFilters as SearchFiltersType } from './components/
 import { PropertyList } from './components/PropertyList';
 import { UploadProperty } from './pages/UploadProperty';
 import { UploadAmenity } from './pages/UploadAmenity';
+import { PropertyDetails } from './pages/PropertyDetails';
 import { Property } from './types/property';
 import { Search, Plus, Building2 } from 'lucide-react';
 import { getProperties, searchProperties } from './services/api';
@@ -12,7 +13,8 @@ function App() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'list' | 'uploadProperty' | 'uploadAmenity'>('list');
+  const [currentView, setCurrentView] = useState<'list' | 'uploadProperty' | 'uploadAmenity' | 'propertyDetails'>('list');
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -43,12 +45,26 @@ function App() {
     }
   };
 
+  const handlePropertyClick = (property: Property) => {
+    setSelectedProperty(property);
+    setCurrentView('propertyDetails');
+  };
+
+  const handleBackToList = () => {
+    setCurrentView('list');
+    setSelectedProperty(null);
+  };
+
   const renderView = () => {
     switch (currentView) {
       case 'uploadProperty':
         return <UploadProperty />;
       case 'uploadAmenity':
         return <UploadAmenity />;
+      case 'propertyDetails':
+        return selectedProperty ? (
+          <PropertyDetails property={selectedProperty} onBack={handleBackToList} />
+        ) : null;
       default:
         return (
           <div className="space-y-8">
@@ -64,7 +80,7 @@ function App() {
                   <h2 className="text-xl font-semibold text-secondary mb-6">
                     {properties.length} Properties Found
                   </h2>
-                  <PropertyList properties={properties} />
+                  <PropertyList properties={properties} onPropertyClick={handlePropertyClick} />
                 </>
               )}
             </div>

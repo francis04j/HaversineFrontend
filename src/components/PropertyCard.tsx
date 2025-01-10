@@ -4,18 +4,33 @@ import { Bed, Home, MapPin, Star } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
+  onClick: (property: Property) => void;
 }
 
-export function PropertyCard({ property }: PropertyCardProps) {
+export function PropertyCard({ property, onClick }: PropertyCardProps) {
+  // Group amenities by category and find closest for each
+  const closestByCategory = property.nearbyAmenities.reduce((acc, amenity) => {
+    if (!acc[amenity.category] || amenity.distance < acc[amenity.category].distance) {
+      acc[amenity.category] = amenity;
+    }
+    return acc;
+  }, {} as Record<string, Property['nearbyAmenities'][0]>);
+
   return (
-    <div className="group cursor-pointer">
+    <div className="group cursor-pointer" onClick={() => onClick(property)}>
       <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
         <img
           src={property.images[0]}
           alt={property.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <button className="absolute top-3 right-3 p-2 rounded-full bg-white/80 hover:bg-white">
+        <button 
+          className="absolute top-3 right-3 p-2 rounded-full bg-white/80 hover:bg-white"
+          onClick={(e) => {
+            e.stopPropagation();
+            // TODO: Implement favorite functionality
+          }}
+        >
           <Star className="w-5 h-5 text-secondary-light" />
         </button>
       </div>
@@ -44,12 +59,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
         
         <div className="pt-2 border-t border-neutral-200">
           <div className="flex flex-wrap gap-2">
-            {Object.entries(property.amenityDistances)
-              .sort(([, a], [, b]) => a - b)
+            {Object.values(closestByCategory)
+              .sort((a, b) => a.distance - b.distance)
               .slice(0, 3)
-              .map(([amenity, distance]) => (
-                <span key={amenity} className="inline-flex items-center px-2 py-1 rounded-full bg-neutral-100 text-secondary-light text-xs">
-                  {amenity.replace('_', ' ')} · {distance.toFixed(1)}km
+              .map((amenity) => (
+                <span key={amenity.id} className="inline-flex items-center px-2 py-1 rounded-full bg-neutral-100 text-secondary-light text-xs">
+                  {amenity.name} · {amenity.distance.toFixed(1)}km
                 </span>
               ))}
           </div>

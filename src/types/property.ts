@@ -3,6 +3,13 @@ export type FurnishedType = 'furnished' | 'unfurnished' | 'any';
 export type LetType = 'long_term' | 'short_term' | 'any';
 export type Amenity = 'gym' | 'park' | 'nursery' | 'hospital' | 'train_station' | 'school' | 'pub' | 'yoga';
 
+export interface NearbyAmenity {
+  id: string;
+  name: string;
+  category: string;
+  distance: number;
+}
+
 export interface Property {
   id: string;
   title: string;
@@ -16,7 +23,7 @@ export interface Property {
     latitude: number;
     longitude: number;
   };
-  amenityDistances: Record<string, number>;
+  nearbyAmenities: NearbyAmenity[];
   images: string[];
   description: string;
   officeLocation: string;

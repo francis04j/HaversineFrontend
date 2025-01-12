@@ -3,7 +3,7 @@ import { Property, PropertyType, FurnishedType, LetType } from '../types/propert
 import { Home, MapPin, Bed, Sofa, Clock, ImageIcon } from 'lucide-react';
 
 interface PropertyFormProps {
-  onSubmit: (property: Omit<Property, 'id'>) => void;
+  onSubmit: (property: Omit<Property, 'id' | 'nearbyAmenities'>) => void;
   isSubmitting: boolean;
 }
 
@@ -22,17 +22,7 @@ export function PropertyForm({ onSubmit, isSubmitting }: PropertyFormProps) {
     },
     images: [''],
     description: '',
-    officeLocation: '',
-    amenityDistances: {
-      gym: 0,
-      park: 0,
-      nursery: 0,
-      hospital: 0,
-      train_station: 0,
-      school: 0,
-      pub: 0,
-      yoga: 0
-    }
+    officeLocation: ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -156,7 +146,7 @@ export function PropertyForm({ onSubmit, isSubmitting }: PropertyFormProps) {
             value={formData.location.address}
             onChange={(e) => handleChange('location', { ...formData.location, address: e.target.value })}
             className="w-full rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
-            placeholder="123 Example Street"
+            placeholder="123 Example Street, City, Postcode"
           />
         </div>
 
@@ -188,30 +178,6 @@ export function PropertyForm({ onSubmit, isSubmitting }: PropertyFormProps) {
           rows={4}
           placeholder="Describe the property..."
         />
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium text-secondary">Amenity Distances (km)</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {Object.keys(formData.amenityDistances).map((amenity) => (
-            <div key={amenity} className="space-y-2">
-              <label className="block text-sm font-medium text-secondary capitalize">
-                {amenity.replace('_', ' ')}
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                value={formData.amenityDistances[amenity]}
-                onChange={(e) => handleChange('amenityDistances', {
-                  ...formData.amenityDistances,
-                  [amenity]: Number(e.target.value)
-                })}
-                className="w-full rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
-              />
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="flex justify-end">

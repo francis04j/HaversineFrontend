@@ -7,9 +7,10 @@ interface ContactInputProps {
   phone: string;
   onWebsiteChange: (website: string) => void;
   onPhoneChange: (phone: string) => void;
+  required?: boolean;
 }
 
-export function ContactInput({ website, phone, onWebsiteChange, onPhoneChange }: ContactInputProps) {
+export function ContactInput({ website, phone, onWebsiteChange, onPhoneChange, required = false }: ContactInputProps) {
   return (
     <div className="space-y-4">
       <h3 className="font-semibold text-secondary">Contact Information</h3>
@@ -18,10 +19,11 @@ export function ContactInput({ website, phone, onWebsiteChange, onPhoneChange }:
         <div className={styles.inputGroup}>
           <label className={styles.label}>
             <Globe className={styles.icon} />
-            Website URL
+            Website URL <span className="text-red-500">*</span>
           </label>
           <input
             type="url"
+            required={required}
             value={website}
             onChange={(e) => onWebsiteChange(e.target.value)}
             className={styles.input}

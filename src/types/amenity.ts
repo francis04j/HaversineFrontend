@@ -1,9 +1,9 @@
-export type AmenityCategory = 'gym' | 'park' | 'school' | 'hospital' | 'train_station' | 'pub' | 'yoga' | 'nursery';
+export type AmenityCategory = 'gym' | 'park' | 'school' | 'hospital' | 'train_station' | 'pub' | 'yoga' | 'nursery' | string;
 
 export interface AmenityLocation {
   address: {
+    addressLine: string;
     city: string;
-    region: string;
     country: string;
     postcode: string;
   };

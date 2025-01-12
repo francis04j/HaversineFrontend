@@ -5,9 +5,10 @@ import styles from '../../styles/components/Input.module.css';
 interface LocationInputProps {
   location: AmenityLocation;
   onChange: (location: AmenityLocation) => void;
+  required?: boolean;
 }
 
-export function LocationInput({ location, onChange }: LocationInputProps) {
+export function LocationInput({ location, onChange, required = false }: LocationInputProps) {
   const handleAddressChange = (field: keyof AmenityLocation['address'], value: string) => {
     onChange({
       ...location,
@@ -34,46 +35,57 @@ export function LocationInput({ location, onChange }: LocationInputProps) {
       
       <div className="grid grid-cols-2 gap-4">
         <div className={styles.inputGroup}>
-          <label className={styles.label}>City</label>
+          <label className={styles.label}>
+            Address <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
-            required
+            required={required}
+            value={location.address.addressLine}
+            onChange={(e) => handleAddressChange('addressLine', e.target.value)}
+            className={styles.input}
+            placeholder="Enter street address"
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>
+            Borough/Town/City <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required={required}
             value={location.address.city}
             onChange={(e) => handleAddressChange('city', e.target.value)}
             className={styles.input}
+            placeholder="Enter borough or town or city"
           />
         </div>
 
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Region</label>
+          <label className={styles.label}>
+            Country
+          </label>
           <input
             type="text"
-            required
-            value={location.address.region}
-            onChange={(e) => handleAddressChange('region', e.target.value)}
-            className={styles.input}
-          />
-        </div>
-
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>Country</label>
-          <input
-            type="text"
-            required
             value={location.address.country}
             onChange={(e) => handleAddressChange('country', e.target.value)}
             className={styles.input}
+            placeholder="Enter country"
           />
         </div>
 
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Postcode</label>
+          <label className={styles.label}>
+            Postcode <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
-            required
+            required={required}
             value={location.address.postcode}
             onChange={(e) => handleAddressChange('postcode', e.target.value)}
             className={styles.input}
+            placeholder="Enter postcode"
           />
         </div>
 
@@ -81,11 +93,11 @@ export function LocationInput({ location, onChange }: LocationInputProps) {
           <label className={styles.label}>Latitude</label>
           <input
             type="number"
-            required
             step="any"
             value={location.coordinates.latitude}
             onChange={(e) => handleCoordinatesChange('latitude', Number(e.target.value))}
             className={styles.input}
+            placeholder="Enter latitude"
           />
         </div>
 
@@ -93,11 +105,11 @@ export function LocationInput({ location, onChange }: LocationInputProps) {
           <label className={styles.label}>Longitude</label>
           <input
             type="number"
-            required
             step="any"
             value={location.coordinates.longitude}
             onChange={(e) => handleCoordinatesChange('longitude', Number(e.target.value))}
             className={styles.input}
+            placeholder="Enter longitude"
           />
         </div>
       </div>

@@ -21,11 +21,11 @@ export interface Property {
   letType: LetType;
   location: {
     address: string;
-    latitude: number;
-    longitude: number;
+//    latitude: number;
+//    longitude: number;
   };
-  nearbyAmenities: NearbyAmenity[];
+ // nearbyAmenities: NearbyAmenity[];
   images: string[];
   description: string;
-  officeLocation: string;
+ // officeLocation: string;
 }

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getProperties, filterProperties } from '../database';
+import { getProperties, filterProperties, addProperty } from '../database';
 import { z } from 'zod';
 
 const router = Router();
@@ -86,6 +86,25 @@ interface PropertyFilters {
   customAmenities: Record<string, number>;
 }
 
+const PropertySchema = z.object({
+  title: z.string(),
+  price: z.number(),
+  bedrooms: z.number(),
+  propertyType: z.string(),
+  furnishedType: z.string(),
+  letType: z.string(),
+   location: z.object({
+     address: z.string(),
+  //   latitude: z.number(),
+  //   longitude: z.number()
+   }),
+  //amenityDistances: z.record(z.number()),
+  images: z.array(z.string()),
+  description: z.string(),
+  //officeLocation: z.string()
+});
+
+
 router.post('/search', (req, res) => {
   try {
     const filters = FilterSchema.parse(req.body);
@@ -93,6 +112,17 @@ router.post('/search', (req, res) => {
     res.json(filteredProperties);
   } catch (error) {
     res.status(400).json({ error: 'Invalid filter parameters' });
+  }
+});
+
+
+router.post('/', (req, res) => {
+  try {
+    const propertyData = PropertySchema.parse(req.body);
+    const newProperty = addProperty(propertyData);
+    res.status(201).json(newProperty);
+  } catch (error) {
+    res.status(400).json({ error: 'Invalid property data' });
   }
 });
 

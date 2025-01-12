@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AmenityCategory } from '../../types/amenity';
 import { LocationInput } from './LocationInput';
 import { ContactInput } from './ContactInput';
+import { Plus, X } from 'lucide-react';
 import styles from '../../styles/components/Input.module.css';
 
 interface AmenityFormProps {
@@ -10,13 +11,15 @@ interface AmenityFormProps {
 }
 
 export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
   const [formData, setFormData] = React.useState({
     name: '',
-    category: 'gym' as AmenityCategory,
+    category: 'gym' as AmenityCategory | string,
     location: {
       address: {
+        addressLine: '',
         city: '',
-        region: '',
         country: '',
         postcode: ''
       },
@@ -31,6 +34,33 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate required fields
+    if (!formData.name.trim()) {
+      alert('Please enter the amenity name');
+      return;
+    }
+    if (!formData.category.trim()) {
+      alert('Please select or enter a category');
+      return;
+    }
+    if (!formData.location.address.addressLine.trim()) {
+      alert('Please enter the address');
+      return;
+    }
+    if (!formData.location.address.city.trim()) {
+      alert('Please enter the city');
+      return;
+    }
+    if (!formData.location.address.postcode.trim()) {
+      alert('Please enter the postcode');
+      return;
+    }
+    if (!formData.website.trim()) {
+      alert('Please enter the website URL');
+      return;
+    }
+
     onSubmit(formData);
   };
 
@@ -41,11 +71,20 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
     }));
   };
 
+  const handleAddCustomCategory = () => {
+    if (customCategory.trim()) {
+      handleChange('category', customCategory.toLowerCase().replace(/\s+/g, '_'));
+      setShowCustomCategory(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Name</label>
+          <label className={styles.label}>
+            Name <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             required
@@ -57,27 +96,73 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
         </div>
 
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Category</label>
-          <select
-            required
-            value={formData.category}
-            onChange={(e) => handleChange('category', e.target.value)}
-            className={styles.input}
-          >
-            <option value="gym">Gym</option>
-            <option value="park">Park</option>
-            <option value="school">School</option>
-            <option value="hospital">Hospital</option>
-            <option value="train_station">Train Station</option>
-            <option value="pub">Pub</option>
-            <option value="yoga">Yoga Studio</option>
-            <option value="nursery">Nursery</option>
-          </select>
+          <label className={styles.label}>
+            Category <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            {showCustomCategory ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  className={styles.input}
+                  placeholder="Enter custom category"
+                  autoFocus
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCustomCategory}
+                  className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomCategory(false)}
+                  className="px-3 py-2 bg-neutral-200 text-secondary rounded-lg hover:bg-neutral-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <select
+                  required
+                  value={formData.category}
+                  onChange={(e) => handleChange('category', e.target.value)}
+                  className={styles.input}
+                >
+                  <option value="">Select a category</option>
+                  <option value="gym">Gym</option>
+                  <option value="park">Park</option>
+                  <option value="school">School</option>
+                  <option value="hospital">Hospital</option>
+                  <option value="train_station">Train Station</option>
+                  <option value="pub">Pub</option>
+                  <option value="yoga">Yoga Studio</option>
+                  <option value="nursery">Nursery</option>
+                  {formData.category && !['gym', 'park', 'school', 'hospital', 'train_station', 'pub', 'yoga', 'nursery'].includes(formData.category) && (
+                    <option value={formData.category}>{formData.category.replace(/_/g, ' ')}</option>
+                  )}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomCategory(true)}
+                  className="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-secondary-light whitespace-nowrap"
+                >
+                  Add New
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <LocationInput
           location={formData.location}
           onChange={(location) => handleChange('location', location)}
+          required={true}
         />
 
         <ContactInput
@@ -85,6 +170,7 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
           phone={formData.phone}
           onWebsiteChange={(website) => handleChange('website', website)}
           onPhoneChange={(phone) => handleChange('phone', phone)}
+          required={true}
         />
       </div>
 

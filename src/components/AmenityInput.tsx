@@ -1,45 +1,32 @@
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import styles from '../styles/components/Input.module.css'
 
-const  distanceUnit: string = 'miles';
 interface AmenityInputProps {
-  onAdd: (amenity: string, distance: number) => void;
+  onAdd: (amenity: string) => void;
   onRemove: (amenity: string) => void;
-  customAmenities: Record<string, number>;
+  customAmenities: string[];
 }
 
 export function AmenityInput({ onAdd, onRemove, customAmenities }: AmenityInputProps) {
   const [newAmenity, setNewAmenity] = useState('');
-  const [distance, setDistance] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newAmenity.trim() && !isNaN(Number(distance))) {
-      onAdd(newAmenity.trim().toLowerCase(), Number(distance));
+    if (newAmenity.trim()) {
+      onAdd(newAmenity.trim().toLowerCase());
       setNewAmenity('');
-      setDistance('');
     }
   };
 
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="flex gap-5">
+      <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           type="text"
           value={newAmenity}
           onChange={(e) => setNewAmenity(e.target.value)}
           placeholder="Enter amenity name"
-          className={styles.input}
-        />
-        <input
-          type="number"
-          value={distance}
-          onChange={(e) => setDistance(e.target.value)}
-          placeholder="Distance (miles)"
-          step="0.1"
-          min="0"
-          className="w-32 px-1 rounded-lg border-2 border-neutral-300 focus:border-primary focus:ring-primary"
+          className="flex-1 rounded-lg border-neutral-300 focus:border-primary focus:ring-primary"
         />
         <button
           type="submit"
@@ -50,18 +37,16 @@ export function AmenityInput({ onAdd, onRemove, customAmenities }: AmenityInputP
         </button>
       </form>
 
-      {Object.entries(customAmenities).length > 0 && (
+      {customAmenities.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-secondary">Nearby Amenities:</h4>
+          <h4 className="text-sm font-medium text-secondary">Custom Amenities:</h4>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(customAmenities).map(([amenity, distance]) => (
+            {customAmenities.map((amenity) => (
               <div
                 key={amenity}
                 className="inline-flex items-center px-3 py-1 rounded-full bg-neutral-100 text-secondary"
               >
-                <span className="text-sm">
-                  {amenity} ({distance > 0 ? distance.toString(): 'Any'} {distanceUnit})
-                </span>
+                <span className="text-sm">{amenity}</span>
                 <button
                   onClick={() => onRemove(amenity)}
                   className="ml-2 text-secondary-light hover:text-secondary"

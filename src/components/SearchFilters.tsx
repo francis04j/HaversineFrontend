@@ -1,10 +1,10 @@
 import React from 'react';
-import { FurnishedType, LetType, PropertyType, Amenity } from '../types/property';
-import { Search, Home, Bed, Building, Sofa, Clock, MapPin, DumbbellIcon, Plus } from 'lucide-react';
+import { FurnishedType, LetType, PropertyType } from '../types/property';
+import { Search, Home, Bed, Sofa, Clock, MapPin } from 'lucide-react';
 import { AmenityInput } from './AmenityInput';
-import styles from '../styles/components/Input.module.css';
-import { PriceRangeInputs } from './PriceRangeInputs';
 import { LocationSearch } from './LocationSearch';
+import { PriceRangeInputs } from './PriceRangeInputs';
+import styles from '../styles/components/Input.module.css';
 
 interface SearchFiltersProps {
   onFilterChange: (filters: SearchFilters) => void;
@@ -15,64 +15,51 @@ export interface SearchFilters {
   fromPrice: number;
   toPrice: number;
   bedrooms: number;
-  propertyType: PropertyType;
+  propertyType: PropertyType | 'any';
   furnishedType: FurnishedType;
   letType: LetType;
   officeLocation: string;
-  selectedAmenities: Amenity[];
-  customAmenities: Record<string, number>;
+  selectedAmenities: string[];
 }
 
 export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   const [filters, setFilters] = React.useState<SearchFilters>({
     location: '',
-    fromPrice: 500,
+    fromPrice: 0,
     toPrice: 5000,
     bedrooms: 1,
-    propertyType: 'any' as PropertyType,
+    propertyType: 'any',
     furnishedType: 'any',
     letType: 'any',
     officeLocation: '',
     selectedAmenities: [],
-    customAmenities: {},
   });
 
   const handleChange = (key: keyof SearchFilters, value: any) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
+    onFilterChange(newFilters);
   };
 
-  const handleSearch = () => {
-    onFilterChange(filters);
-  };
-
-  const handleAddCustomAmenity = (amenity: string, distance: number) => {
-    const newCustomAmenities = {
-      ...filters.customAmenities,
-      [amenity]: distance,
-    };
-    handleChange('customAmenities', newCustomAmenities);
+  const handleAddCustomAmenity = (amenity: string) => {
+    const newSelectedAmenities = [...filters.selectedAmenities, amenity];
+    handleChange('selectedAmenities', newSelectedAmenities);
   };
 
   const handleRemoveCustomAmenity = (amenity: string) => {
-    const newCustomAmenities = { ...filters.customAmenities };
-    delete newCustomAmenities[amenity];
-    handleChange('customAmenities', newCustomAmenities);
+    const newSelectedAmenities = filters.selectedAmenities.filter(a => a !== amenity);
+    handleChange('selectedAmenities', newSelectedAmenities);
   };
-
-  const amenities: Amenity[] = ['gym', 'park', 'nursery', 'hospital', 'train_station', 'school', 'pub', 'yoga'];
 
   return (
     <div className="bg-white rounded-xl shadow-search hover:shadow-search-hover transition-shadow p-6 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        
-      <LocationSearch fieldName='Location'
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <LocationSearch
           value={filters.location}
           onChange={(value) => handleChange('location', value)}
         />
         
-        
-      <PriceRangeInputs
+        <PriceRangeInputs
           fromPrice={filters.fromPrice}
           toPrice={filters.toPrice}
           onChange={(fromPrice, toPrice) => {
@@ -81,23 +68,23 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
           }}
         />
 
-        <div className="space-y-2">
-          <label className="flex items-center text-sm font-bold text-secondary">
-            <Bed className="w-4 h-4 mr-2" />
-            Bedrooms
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>
+            <Bed className={styles.icon} />
+            Minimum Bedrooms
           </label>
           <input
             type="number"
-            min="1"
+            min="0"
             value={filters.bedrooms}
-            onChange={(e) => handleChange('bedrooms', parseInt(e.target.value))}
+            onChange={(e) => handleChange('bedrooms', Number(e.target.value))}
             className={styles.input}
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="flex items-center text-sm font-bold text-secondary">
-            <Home className="w-4 h-4 mr-2" />
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>
+            <Home className={styles.icon} />
             Property Type
           </label>
           <select
@@ -114,14 +101,14 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
           </select>
         </div>
 
-        <div className="space-y-2">
-          <label className="flex items-center text-sm font-bold text-secondary">
-            <Sofa className="w-4 h-4 mr-2" />
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>
+            <Sofa className={styles.icon} />
             Furnished Type
           </label>
           <select
             value={filters.furnishedType}
-            onChange={(e) => handleChange('furnishedType', e.target.value)}
+            onChange={(e) => handleChange('furnishedType', e.target.value as FurnishedType)}
             className={styles.input}
           >
             <option value="any">Any</option>
@@ -130,14 +117,14 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
           </select>
         </div>
 
-        <div className="space-y-2">
-          <label className="flex items-center text-sm font-bold text-secondary">
-            <Clock className="w-4 h-4 mr-2" />
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>
+            <Clock className={styles.icon} />
             Let Type
           </label>
           <select
             value={filters.letType}
-            onChange={(e) => handleChange('letType', e.target.value)}
+            onChange={(e) => handleChange('letType', e.target.value as LetType)}
             className={styles.input}
           >
             <option value="any">Any</option>
@@ -145,75 +132,15 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
             <option value="short_term">Short Term</option>
           </select>
         </div>
-
-        <div className="space-y-2">
-          <label className="flex items-center text-sm font-bold text-secondary">
-            <MapPin className="w-4 h-4 mr-2" />
-            Office Location
-          </label>
-          <input
-            type="text"
-            value={filters.officeLocation}
-            onChange={(e) => handleChange('officeLocation', e.target.value)}
-            className={styles.input}
-            placeholder="Enter location..."
-          />
-        </div>
-
-        <LocationSearch fieldName='Office Location'
-          value={filters.officeLocation}
-          onChange={(value) => handleChange('officeLocation', value)}
-        />
-        
       </div>
 
       <div className="space-y-4">
-        <div className="space-y-2">
-          <label className="flex items-center text-sm font-bold text-secondary">
-            <DumbbellIcon className="w-4 h-4 mr-2" />
-            Nearby Amenities
-          </label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {amenities.map((amenity) => (
-              <label key={amenity} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={filters.selectedAmenities.includes(amenity)}
-                  onChange={(e) => {
-                    const newAmenities = e.target.checked
-                      ? [...filters.selectedAmenities, amenity]
-                      : filters.selectedAmenities.filter((a) => a !== amenity);
-                    handleChange('selectedAmenities', newAmenities);
-                  }}
-                  className="rounded border-neutral-300 text-primary focus:ring-primary"
-                />
-                <span className="text-sm text-secondary-light capitalize">{amenity.replace('_', ' ')}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="flex items-center text-sm font-bold text-secondary">
-            <Plus className="w-4 h-4 mr-2" />
-            Enter your preferred nearby Amenities
-          </label>
-          <AmenityInput
-            onAdd={handleAddCustomAmenity}
-            onRemove={handleRemoveCustomAmenity}
-            customAmenities={filters.customAmenities}
-          />
-        </div>
-
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={handleSearch}
-            className="inline-flex items-center px-6 py-3 rounded-lg text-base font-bold text-white bg-primary hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-          >
-            <Search className="w-5 h-5 mr-2" />
-            Search Properties
-          </button>
-        </div>
+        <h3 className="text-lg font-medium text-secondary">Custom Amenities</h3>
+        <AmenityInput
+          onAdd={handleAddCustomAmenity}
+          onRemove={handleRemoveCustomAmenity}
+          customAmenities={filters.selectedAmenities}
+        />
       </div>
     </div>
   );

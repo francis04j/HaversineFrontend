@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import styles from '../styles/components/Input.module.css'
 
+const  distanceUnit: string = 'miles';
 interface AmenityInputProps {
   onAdd: (amenity: string, distance: number) => void;
   onRemove: (amenity: string) => void;
@@ -23,7 +24,7 @@ export function AmenityInput({ onAdd, onRemove, customAmenities }: AmenityInputP
 
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex gap-5">
         <input
           type="text"
           value={newAmenity}
@@ -35,7 +36,7 @@ export function AmenityInput({ onAdd, onRemove, customAmenities }: AmenityInputP
           type="number"
           value={distance}
           onChange={(e) => setDistance(e.target.value)}
-          placeholder="Distance (km)"
+          placeholder="Distance (miles)"
           step="0.1"
           min="0"
           className="w-32 px-1 rounded-lg border-2 border-neutral-300 focus:border-primary focus:ring-primary"
@@ -59,7 +60,7 @@ export function AmenityInput({ onAdd, onRemove, customAmenities }: AmenityInputP
                 className="inline-flex items-center px-3 py-1 rounded-full bg-neutral-100 text-secondary"
               >
                 <span className="text-sm">
-                  {amenity} ({distance}km)
+                  {amenity} ({distance > 0 ? distance.toString(): 'Any'} {distanceUnit})
                 </span>
                 <button
                   onClick={() => onRemove(amenity)}

@@ -96,7 +96,7 @@ function App() {
           <div className="flex items-center justify-between">
             <div className="flex items-center cursor-pointer" onClick={() => setCurrentView('list')}>
               <Search className="h-8 w-8 text-primary" />
-              <h1 className="ml-2 text-2xl font-bold text-primary">RentHub</h1>
+              <h1 className="ml-2 text-2xl font-bold text-primary">CloseBy</h1>
             </div>
             <div className="flex items-center space-x-4">
               <button

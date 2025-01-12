@@ -8,6 +8,7 @@ export interface NearbyAmenity {
   name: string;
   category: string;
   distance: number;
+  url: string;
 }
 
 export interface Property {

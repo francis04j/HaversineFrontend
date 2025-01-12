@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Property } from '../types/property';
-import { Bed, Home, MapPin, PoundSterling, Sofa, Clock } from 'lucide-react';
+import { Bed, Home, MapPin, PoundSterling, Sofa, Clock, Search, Plus } from 'lucide-react';
+import styles from '../styles/components/Input.module.css';
+import { url } from 'inspector';
 
 interface PropertyDetailsProps {
   property: Property;
@@ -8,6 +10,10 @@ interface PropertyDetailsProps {
 }
 
 export function PropertyDetails({ property, onBack }: PropertyDetailsProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchDistance, setSearchDistance] = useState('');
+  const [searchResults, setSearchResults] = useState<Property['nearbyAmenities']>([]);
+
   // Group amenities by category
   const amenitiesByCategory = property.nearbyAmenities.reduce((acc, amenity) => {
     if (!acc[amenity.category]) {
@@ -16,6 +22,33 @@ export function PropertyDetails({ property, onBack }: PropertyDetailsProps) {
     acc[amenity.category].push(amenity);
     return acc;
   }, {} as Record<string, typeof property.nearbyAmenities>);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm && searchDistance) {
+      // Generate a random business name
+      const businessNames = [
+        'The Local', 'City Center', 'Downtown', 'Metropolitan',
+        'Central', 'Urban', 'Community', 'District'
+      ];
+      const randomName = `${businessNames[Math.floor(Math.random() * businessNames.length)]} ${searchTerm}`;
+      
+      // Generate a random distance within the specified range
+      const distance = Number((Math.random() * Number(searchDistance)).toFixed(1));
+      
+      const newAmenity = {
+        id: `search-${Date.now()}`,
+        name: randomName,
+        category: 'search_result',
+        distance,
+        url: 'https://www.google.com/maps/search/?api=1&query=',
+      };
+
+      setSearchResults(prevResults => [...prevResults,newAmenity]);
+      setSearchTerm('');
+      setSearchDistance('');
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -80,10 +113,62 @@ export function PropertyDetails({ property, onBack }: PropertyDetailsProps) {
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl shadow-search">
               <h2 className="text-xl font-semibold text-secondary mb-4">Nearby Amenities</h2>
+              
+              <div className="mb-6">
+                <form onSubmit={handleSearch} className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-secondary">
+                      Search for amenity
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Enter amenity name"
+                        className={`${styles.input} flex-1`}
+                      />
+                      <input
+                        type="number"
+                        value={searchDistance}
+                        onChange={(e) => setSearchDistance(e.target.value)}
+                        placeholder="Max distance (km)"
+                        step="0.1"
+                        min="0"
+                        className={`${styles.input} w-32`}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                  >
+                    <Search className="w-4 h-4" />
+                    Search
+                  </button>
+                </form>
+              </div>
+
               <div className="space-y-6">
+                {searchResults.length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-secondary capitalize mb-2">Search Results</h3>
+                    <div className="space-y-2">
+                      {searchResults
+                        .sort((a, b) => a.distance - b.distance)
+                        .map((amenity) => (
+                          <div key={amenity.id} className="flex justify-between items-center text-sm">
+                            <span className="text-secondary">{amenity.name}</span>
+                            <span className="text-secondary-light">{amenity.distance}km</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+                
                 {Object.entries(amenitiesByCategory).map(([category, amenities]) => (
                   <div key={category}>
-                    <h3 className="font-medium text-secondary capitalize mb-2">{category}</h3>
+                    <h3 className="font-medium text-secondary capitalize mb-2">{category.replace('_', ' ')}</h3>
                     <div className="space-y-2">
                       {amenities
                         .sort((a, b) => a.distance - b.distance)

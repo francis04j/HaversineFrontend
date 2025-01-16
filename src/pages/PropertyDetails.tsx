@@ -57,8 +57,8 @@ export function PropertyDetails() {
     e.preventDefault();
     if (searchTerm ) {
       const businessNames = [
-        'The Local', 'City Center', 'Downtown', 'Metropolitan',
-        'Central', 'Urban', 'Community', 'District'
+        'The Local', 'Greenwich', 'Blackheath', 'Woolwich',
+        'The Royal', 'Community'
       ];
       const randomName = `${businessNames[Math.floor(Math.random() * businessNames.length)]} ${searchTerm}`;
       const distance = Number((Math.random() * Number(searchDistance)).toFixed(1));
@@ -108,7 +108,7 @@ export function PropertyDetails() {
         <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
             <Search className="h-8 w-8 text-primary" />
-            <h1 className="ml-2 text-2xl font-bold text-primary">RentHub</h1>
+            <h1 className="ml-2 text-2xl font-bold text-primary">CloseBy</h1>
           </div>
         </div>
       </header>

@@ -102,8 +102,8 @@ export function filterProperties(filters: PropertyFilters) {
         const randomDistance = Math.random() * maxDistance;
         // Generate a random business name
         const businessNames = [
-          'The Local', 'City Center', 'Downtown', 'Metropolitan',
-          'Central', 'Urban', 'Community', 'District'
+          'The Local', 'Greenwich', 'Blackheath', 'Woolwich',
+        'The Royal', 'Community'
         ];
         const randomName = `${businessNames[Math.floor(Math.random() * businessNames.length)]} ${amenity}`;
         

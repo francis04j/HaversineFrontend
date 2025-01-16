@@ -47,7 +47,7 @@ export function SearchPage() {
   };
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <header className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
@@ -78,7 +78,7 @@ export function SearchPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="space-y-8">
           <SearchFilters onFilterChange={handleFilterChange} />
           
@@ -98,6 +98,30 @@ export function SearchPage() {
           </div>
         </div>
       </main>
-    </>
+
+      <footer className="bg-white border-t border-neutral-200 mt-8">
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div className="text-sm text-secondary-light">
+              © {new Date().getFullYear()} CloseBy. All rights reserved.
+            </div>
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => navigate('/interested-agents')}
+                className="text-sm text-primary hover:text-primary-dark transition-colors"
+              >
+                Become an Agent
+              </button>
+              <button
+                onClick={() => navigate('/amenities')}
+                className="text-sm text-primary hover:text-primary-dark transition-colors"
+              >
+                View Amenities
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

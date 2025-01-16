@@ -5,6 +5,7 @@ import { PropertyDetails } from './pages/PropertyDetails';
 import { UploadProperty } from './pages/UploadProperty';
 import { UploadAmenity } from './pages/UploadAmenity';
 import { AmenitiesList } from './pages/AmenitiesList';
+import { InterestedAgents } from './pages/InterestedAgents';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/upload-property" element={<UploadProperty />} />
           <Route path="/upload-amenity" element={<UploadAmenity />} />
           <Route path="/amenities" element={<AmenitiesList />} />
+          <Route path="/interested-agents" element={<InterestedAgents />} />
         </Routes>
       </div>
     </Router>

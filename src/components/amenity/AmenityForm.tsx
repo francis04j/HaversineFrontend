@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AmenityCategory } from '../../types/amenity';
 import { LocationInput } from './LocationInput';
 import { ContactInput } from './ContactInput';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Star } from 'lucide-react';
 import styles from '../../styles/components/Input.module.css';
 
 interface AmenityFormProps {
@@ -16,6 +16,8 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
   const [formData, setFormData] = React.useState({
     name: '',
     category: 'gym' as AmenityCategory | string,
+    createdBy: '',
+    rating: 1,
     location: {
       address: {
         addressLine: '',
@@ -44,16 +46,12 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
       alert('Please select or enter a category');
       return;
     }
+    if (!formData.createdBy.trim()) {
+      alert('Please enter your name');
+      return;
+    }
     if (!formData.location.address.addressLine.trim()) {
       alert('Please enter the address');
-      return;
-    }
-    if (!formData.location.address.city.trim()) {
-      alert('Please enter the city');
-      return;
-    }
-    if (!formData.location.address.postcode.trim()) {
-      alert('Please enter the postcode');
       return;
     }
     if (!formData.website.trim()) {
@@ -78,6 +76,23 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
     }
   };
 
+  const renderStars = () => {
+    const stars = [];
+    for (let i = 0.5; i <= 5; i += 0.5) {
+      stars.push(
+        <button
+          key={i}
+          type="button"
+          onClick={() => handleChange('rating', i)}
+          className={`p-1 ${formData.rating >= i ? 'text-yellow-400' : 'text-gray-300'}`}
+        >
+          <Star className="w-5 h-5" fill={formData.rating >= i ? 'currentColor' : 'none'} />
+        </button>
+      );
+    }
+    return stars;
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
@@ -93,6 +108,32 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
             className={styles.input}
             placeholder="Enter amenity name"
           />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>
+            Created by <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.createdBy}
+            onChange={(e) => handleChange('createdBy', e.target.value)}
+            className={styles.input}
+            placeholder="Enter your name"
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>
+            Rating <span className="text-red-500">*</span>
+          </label>
+          <div className="flex items-center space-x-1">
+            {renderStars()}
+            <span className="ml-2 text-sm text-secondary-light">
+              ({formData.rating} out of 5)
+            </span>
+          </div>
         </div>
 
         <div className={styles.inputGroup}>
@@ -163,6 +204,7 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
           location={formData.location}
           onChange={(location) => handleChange('location', location)}
           required={true}
+          simplified={true}
         />
 
         <ContactInput

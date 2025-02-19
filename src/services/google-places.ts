@@ -1,22 +1,7 @@
-import { Loader } from '@googlemaps/js-api-loader';
-import { env } from '../config/env';
+import { loader } from './google-maps-loader';
+import type { NearbyAmenity } from '../types/property';
 
-const loader = new Loader({
-  apiKey: env.GOOGLE_MAPS_API_KEY,
-  version: "weekly",
-  libraries: ["places"]
-});
-
-
-// const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-// const loader = new Loader({
-//   apiKey: GOOGLE_MAPS_API_KEY,
-//   version: "weekly",
-//   libraries: ["places"]
-// });
-
-export async function getNearbyAmenities(address: string) {
+export async function getNearbyAmenities(address: string): Promise<NearbyAmenity[]> {
   try {
     const google = await loader.load();
     const geocoder = new google.maps.Geocoder();
@@ -25,7 +10,7 @@ export async function getNearbyAmenities(address: string) {
     const { results } = await new Promise<google.maps.GeocoderResponse>((resolve, reject) => {
       geocoder.geocode({ address }, (results, status) => {
         if (status === 'OK') {
-          resolve({ results, status });
+          resolve({ results } as google.maps.GeocoderResponse);
         } else {
           reject(new Error(`Geocoding failed: ${status}`));
         }
@@ -43,15 +28,15 @@ export async function getNearbyAmenities(address: string) {
     const types = [
       'gym', 'park', 'school', 'hospital', 'train_station',
       'restaurant', 'shopping_mall', 'supermarket'
-    ];
+    ] as const;
 
     // Search for places of each type
     const searchPromises = types.map(type => 
       new Promise<google.maps.places.PlaceResult[]>((resolve) => {
-        const request: google.maps.places.PlaceSearchRequest = {
+        const request = {
           location,
-          radius: 1500, // 1.5km radius
-          type: type as google.maps.places.PlaceType
+          radius: 3500, // 3.5km radius
+          type
         };
 
         service.nearbySearch(request, (results, status) => {
@@ -82,7 +67,7 @@ export async function getNearbyAmenities(address: string) {
     return nearbyAmenities;
   } catch (error) {
     console.error('Error fetching nearby amenities:', error);
-    throw error;
+    return []; // Return empty array on error
   }
 }
 

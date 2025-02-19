@@ -7,7 +7,7 @@ interface AmenityInputProps {
   customAmenities: string[];
 }
 
-export default function AmenityInput({ onAdd, onRemove, customAmenities }: AmenityInputProps) {
+export function AmenityInput({ onAdd, onRemove, customAmenities }: AmenityInputProps) {
   const [newAmenity, setNewAmenity] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Property } from '../types/property';
+import { Property, NearbyAmenity } from '../types/property';
 import { Bed, Home, MapPin, Sofa, Clock, Search, Share2 } from 'lucide-react';
+import { PropertyMap } from '../components/PropertyMap';
 import styles from '../styles/components/Input.module.css';
 import { getProperties } from '../services/api';
+import { getNearbyAmenities } from '../services/google-places';
 
 export function PropertyDetails() {
   const { id } = useParams<{ id: string }>();
@@ -13,16 +15,26 @@ export function PropertyDetails() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchDistance, setSearchDistance] = useState('');
-  const [searchResults, setSearchResults] = useState<Property['nearbyAmenities']>([]);
+  const [searchResults, setSearchResults] = useState<NearbyAmenity[]>([]);
   const [shareMessage, setShareMessage] = useState('');
+  const [nearbyAmenities, setNearbyAmenities] = useState<NearbyAmenity[]>([]);
+  const [loadingAmenities, setLoadingAmenities] = useState(false);
 
   useEffect(() => {
-    const fetchProperty = async () => {
+    const fetchPropertyAndAmenities = async () => {
       try {
+        // Fetch property details
         const properties = await getProperties();
         const foundProperty = properties.find(p => p.id === id);
+        
         if (foundProperty) {
           setProperty(foundProperty);
+          
+          // Fetch nearby amenities using Google Places API
+          setLoadingAmenities(true);
+          const amenities = await getNearbyAmenities(foundProperty.location.address);
+          setNearbyAmenities(amenities);
+          setLoadingAmenities(false);
         } else {
           setError('Property not found');
         }
@@ -33,7 +45,7 @@ export function PropertyDetails() {
       }
     };
 
-    fetchProperty();
+    fetchPropertyAndAmenities();
   }, [id]);
 
   if (loading) {
@@ -45,30 +57,29 @@ export function PropertyDetails() {
   }
 
   // Group amenities by category
-  const amenitiesByCategory = property.nearbyAmenities.reduce((acc, amenity) => {
+  const amenitiesByCategory = nearbyAmenities.reduce((acc, amenity) => {
     if (!acc[amenity.category]) {
       acc[amenity.category] = [];
     }
     acc[amenity.category].push(amenity);
     return acc;
-  }, {} as Record<string, typeof property.nearbyAmenities>);
+  }, {} as Record<string, typeof nearbyAmenities>);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm ) {
+    if (searchTerm) {
       const businessNames = [
-        'The Local', 'Greenwich', 'Blackheath', 'Woolwich',
-        'The Royal', 'Community'
+        'The Local', 'City Center', 'Downtown', 'Metropolitan',
+        'Central', 'Urban', 'Community', 'District'
       ];
       const randomName = `${businessNames[Math.floor(Math.random() * businessNames.length)]} ${searchTerm}`;
-      const distance = Number((Math.random() * Number(searchDistance)).toFixed(1));
+      const distance = Number((Math.random() * Number(searchDistance || 2)).toFixed(1));
       
-      const newAmenity = {
+      const newAmenity: NearbyAmenity = {
         id: `search-${Date.now()}`,
         name: randomName,
         category: 'search_result',
-        distance,
-        url: `https://www.google.com/maps/search/${randomName}`
+        distance
       };
 
       setSearchResults(prevResults => [...prevResults, newAmenity]);
@@ -81,7 +92,7 @@ export function PropertyDetails() {
     const propertyUrl = `${window.location.origin}/property/${property.id}`;
     const shareData = {
       title: "See amenities and places of interest near your property!",
-      text: `${property.title}  in ${property.location.address}`,
+      text: `${property.title} in ${property.location.address}`,
       url: propertyUrl
     };
 
@@ -108,7 +119,7 @@ export function PropertyDetails() {
         <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
             <Search className="h-8 w-8 text-primary" />
-            <h1 className="ml-2 text-2xl font-bold text-primary">CloseBy</h1>
+            <h1 className="ml-2 text-2xl font-bold text-primary">RentHub</h1>
           </div>
         </div>
       </header>
@@ -163,7 +174,7 @@ export function PropertyDetails() {
                 </div>
                 <div className="flex items-center text-secondary">
                   <Clock className="w-5 h-5 mr-2" />
-                  <span className="capitalize">{property.letType}</span>
+                  <span className="capitalize">{property.letType.replace('_', ' ')}</span>
                 </div>
               </div>
 
@@ -174,10 +185,11 @@ export function PropertyDetails() {
 
               <div>
                 <h2 className="text-xl font-semibold text-secondary mb-3">Location</h2>
-                <div className="flex items-start text-secondary-light">
+                <div className="flex items-start text-secondary-light mb-4">
                   <MapPin className="w-5 h-5 mr-2 mt-1 flex-shrink-0" />
                   <span>{property.location.address}</span>
                 </div>
+                <PropertyMap property={property} nearbyAmenities={nearbyAmenities} />
               </div>
             </div>
 
@@ -199,7 +211,6 @@ export function PropertyDetails() {
                           placeholder="Enter amenity name"
                           className={`${styles.input} flex-1`}
                         />
-                        
                       </div>
                     </div>
                     <button
@@ -213,37 +224,47 @@ export function PropertyDetails() {
                 </div>
 
                 <div className="space-y-6">
-                  {searchResults.length > 0 && (
-                    <div>
-                      <h3 className="font-medium text-secondary capitalize mb-2">Search Results</h3>
-                      <div className="space-y-2">
-                        {searchResults
-                          .sort((a, b) => a.distance - b.distance)
-                          .map((amenity) => (
-                            <div key={amenity.id} className="flex justify-between items-center text-sm">
-                              <span className="text-secondary">{amenity.name}</span>
-                              <span className="text-secondary-light">{amenity.distance}km</span>
-                            </div>
-                          ))}
-                      </div>
+                  {loadingAmenities ? (
+                    <div className="text-center py-4 text-secondary-light">
+                      Loading nearby amenities...
                     </div>
+                  ) : (
+                    <>
+                      {searchResults.length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-secondary capitalize mb-2">Search Results</h3>
+                          <div className="space-y-2">
+                            {searchResults
+                              .sort((a, b) => a.distance - b.distance)
+                              .map((amenity) => (
+                                <div key={amenity.id} className="flex justify-between items-center text-sm">
+                                  <span className="text-secondary">{amenity.name}</span>
+                                  <span className="text-secondary-light">{amenity.distance}km</span>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {Object.entries(amenitiesByCategory).map(([category, amenities]) => (
+                        <div key={category}>
+                          <h3 className="font-medium text-secondary capitalize mb-2">
+                            {category.replace(/_/g, ' ')}
+                          </h3>
+                          <div className="space-y-2">
+                            {amenities
+                              .sort((a, b) => a.distance - b.distance)
+                              .map((amenity) => (
+                                <div key={amenity.id} className="flex justify-between items-center text-sm">
+                                  <span className="text-secondary">{amenity.name}</span>
+                                  <span className="text-secondary-light">{amenity.distance}km</span>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      ))}
+                    </>
                   )}
-                  
-                  {Object.entries(amenitiesByCategory).map(([category, amenities]) => (
-                    <div key={category}>
-                      <h3 className="font-medium text-secondary capitalize mb-2">{category.replace('_', ' ')}</h3>
-                      <div className="space-y-2">
-                        {amenities
-                          .sort((a, b) => a.distance - b.distance)
-                          .map((amenity) => (
-                            <div key={amenity.id} className="flex justify-between items-center text-sm">
-                              <span className="text-secondary">{amenity.name}</span>
-                              <span className="text-secondary-light">{amenity.distance.toFixed(1)}km</span>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
 

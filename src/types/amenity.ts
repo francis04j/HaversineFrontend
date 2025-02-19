@@ -20,4 +20,6 @@ export interface Amenity {
   location: AmenityLocation;
   website?: string;
   phone?: string;
+  createdBy: string;
+  rating: number;
 }

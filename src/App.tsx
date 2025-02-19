@@ -6,6 +6,7 @@ import { UploadProperty } from './pages/UploadProperty';
 import { UploadAmenity } from './pages/UploadAmenity';
 import { AmenitiesList } from './pages/AmenitiesList';
 import { InterestedAgents } from './pages/InterestedAgents';
+import { InvestPage } from './pages/InvestPage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/upload-amenity" element={<UploadAmenity />} />
           <Route path="/amenities" element={<AmenitiesList />} />
           <Route path="/interested-agents" element={<InterestedAgents />} />
+          <Route path="/invest" element={<InvestPage />} />
         </Routes>
       </div>
     </Router>

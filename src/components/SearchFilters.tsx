@@ -54,7 +54,7 @@ export function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   return (
     <div className="bg-white rounded-xl shadow-search hover:shadow-search-hover transition-shadow p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <LocationSearch fieldName='Location'
+        <LocationSearch
           value={filters.location}
           onChange={(value) => handleChange('location', value)}
         />

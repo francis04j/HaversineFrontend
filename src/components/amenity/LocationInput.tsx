@@ -6,9 +6,10 @@ interface LocationInputProps {
   location: AmenityLocation;
   onChange: (location: AmenityLocation) => void;
   required?: boolean;
+  simplified?: boolean;
 }
 
-export function LocationInput({ location, onChange, required = false }: LocationInputProps) {
+export function LocationInput({ location, onChange, required = false, simplified = false }: LocationInputProps) {
   const handleAddressChange = (field: keyof AmenityLocation['address'], value: string) => {
     onChange({
       ...location,
@@ -33,8 +34,8 @@ export function LocationInput({ location, onChange, required = false }: Location
     <div className="space-y-4">
       <h3 className="font-semibold text-secondary">Location Details</h3>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div className={styles.inputGroup}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`${styles.inputGroup} ${simplified ? 'md:col-span-2' : ''}`}>
           <label className={styles.label}>
             Address <span className="text-red-500">*</span>
           </label>
@@ -48,46 +49,50 @@ export function LocationInput({ location, onChange, required = false }: Location
           />
         </div>
 
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>
-            Borough/Town/City <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            required={required}
-            value={location.address.city}
-            onChange={(e) => handleAddressChange('city', e.target.value)}
-            className={styles.input}
-            placeholder="Enter borough or town or city"
-          />
-        </div>
+        {!simplified && (
+          <>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>
+                Town/City <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required={required}
+                value={location.address.city}
+                onChange={(e) => handleAddressChange('city', e.target.value)}
+                className={styles.input}
+                placeholder="Enter city"
+              />
+            </div>
 
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>
-            Country
-          </label>
-          <input
-            type="text"
-            value={location.address.country}
-            onChange={(e) => handleAddressChange('country', e.target.value)}
-            className={styles.input}
-            placeholder="Enter country"
-          />
-        </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>
+                Country
+              </label>
+              <input
+                type="text"
+                value={location.address.country}
+                onChange={(e) => handleAddressChange('country', e.target.value)}
+                className={styles.input}
+                placeholder="Enter country"
+              />
+            </div>
 
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>
-            Postcode <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            required={required}
-            value={location.address.postcode}
-            onChange={(e) => handleAddressChange('postcode', e.target.value)}
-            className={styles.input}
-            placeholder="Enter postcode"
-          />
-        </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>
+                Postcode <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required={required}
+                value={location.address.postcode}
+                onChange={(e) => handleAddressChange('postcode', e.target.value)}
+                className={styles.input}
+                placeholder="Enter postcode"
+              />
+            </div>
+          </>
+        )}
 
         <div className={styles.inputGroup}>
           <label className={styles.label}>Latitude</label>

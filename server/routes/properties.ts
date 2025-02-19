@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getProperties, filterProperties, addProperty } from '../database';
+import { storeAmenities } from '../database/amenities-store';
 import { z } from 'zod';
 
 const router = Router();
@@ -15,77 +16,6 @@ const FilterSchema = z.object({
   customAmenities: z.record(z.number())
 });
 
-export type PropertyType = 'detached' | 'semi-detached' | 'terraced' | 'flat' | 'bungalow';
-export type FurnishedType = 'furnished' | 'unfurnished' | 'any';
-export type LetType = 'long_term' | 'short_term' | 'any';
-export type Amenity = 'gym' | 'park' | 'nursery' | 'hospital' | 'train_station' | 'school' | 'pub' | 'yoga';
-
-export interface Property {
-  id: string;
-  title: string;
-  price: number;
-  bedrooms: number;
-  propertyType: PropertyType;
-  furnishedType: FurnishedType;
-  letType: LetType;
-  location: {
-    address: string;
-    latitude: number;
-    longitude: number;
-  };
-  amenityDistances: Record<string, number>;
-  images: string[];
-  description: string;
-  officeLocation: string;
-}
-
-// In-memory database
-let properties: Property[] = [];
-
-export function filterProperties(filters: PropertyFilters) {
-  return properties.filter(property => {
-    const priceMatch = property.price >= filters.priceRange[0] && property.price <= filters.priceRange[1];
-    const bedroomsMatch = property.bedrooms >= filters.bedrooms;
-    const propertyTypeMatch = filters.propertyType === 'any' || property.propertyType === filters.propertyType;
-    const furnishedTypeMatch = filters.furnishedType === 'any' || property.furnishedType === filters.furnishedType;
-    const letTypeMatch = filters.letType === 'any' || property.letType === filters.letType;
-    const officeLocationMatch = !filters.officeLocation || 
-      property.officeLocation.toLowerCase().includes(filters.officeLocation.toLowerCase());
-
-    return priceMatch && bedroomsMatch && propertyTypeMatch && 
-           furnishedTypeMatch && letTypeMatch && officeLocationMatch;
-  }).sort((a, b) => {
-    const allAmenities = {
-      ...filters.customAmenities,
-      ...(filters.selectedAmenities.reduce((acc, amenity) => ({
-        ...acc,
-        [amenity]: a.amenityDistances[amenity] || Infinity
-      }), {}))
-    };
-    
-    if (Object.keys(allAmenities).length === 0) return 0;
-    
-    const scoreA = Object.entries(allAmenities).reduce((score, [amenity, targetDistance]) => 
-      score + Math.abs((a.amenityDistances[amenity] || Infinity) - targetDistance), 0);
-    
-    const scoreB = Object.entries(allAmenities).reduce((score, [amenity, targetDistance]) => 
-      score + Math.abs((b.amenityDistances[amenity] || Infinity) - targetDistance), 0);
-    
-    return scoreA - scoreB;
-  });
-}
-
-interface PropertyFilters {
-  priceRange: [number, number];
-  bedrooms: number;
-  propertyType: string;
-  furnishedType: string;
-  letType: string;
-  officeLocation: string;
-  selectedAmenities: string[];
-  customAmenities: Record<string, number>;
-}
-
 const PropertySchema = z.object({
   title: z.string(),
   price: z.number(),
@@ -93,17 +23,27 @@ const PropertySchema = z.object({
   propertyType: z.string(),
   furnishedType: z.string(),
   letType: z.string(),
-   location: z.object({
-     address: z.string(),
-  //   latitude: z.number(),
-  //   longitude: z.number()
-   }),
-  //amenityDistances: z.record(z.number()),
+  location: z.object({
+    address: z.string(),
+    latitude: z.number(),
+    longitude: z.number()
+  }),
+  amenityDistances: z.record(z.number()),
   images: z.array(z.string()),
   description: z.string(),
-  //officeLocation: z.string()
+  officeLocation: z.string(),
+  nearbyAmenities: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    category: z.string(),
+    distance: z.number()
+  }))
 });
 
+router.get('/', (_, res) => {
+  const properties = getProperties();
+  res.json(properties);
+});
 
 router.post('/search', (req, res) => {
   try {
@@ -115,11 +55,16 @@ router.post('/search', (req, res) => {
   }
 });
 
-
 router.post('/', (req, res) => {
   try {
     const propertyData = PropertySchema.parse(req.body);
     const newProperty = addProperty(propertyData);
+    
+    // Store amenities in the in-memory store
+    if (propertyData.nearbyAmenities) {
+      storeAmenities(newProperty.id, propertyData.nearbyAmenities);
+    }
+    
     res.status(201).json(newProperty);
   } catch (error) {
     res.status(400).json({ error: 'Invalid property data' });

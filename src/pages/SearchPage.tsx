@@ -17,9 +17,12 @@ export function SearchPage() {
     const fetchProperties = async () => {
       try {
         const data = await getProperties();
-        setProperties(data);
+        // Ensure we have an array of properties
+        setProperties(Array.isArray(data) ? data : []);
         setError(null);
       } catch (err) {
+        console.error('Error fetching properties:', err);
+        setProperties([]);
         setError('Failed to fetch properties');
       } finally {
         setLoading(false);
@@ -33,9 +36,12 @@ export function SearchPage() {
     setLoading(true);
     try {
       const filteredProperties = await searchProperties(filters);
-      setProperties(filteredProperties);
+      // Ensure we have an array of properties
+      setProperties(Array.isArray(filteredProperties) ? filteredProperties : []);
       setError(null);
     } catch (err) {
+      console.error('Error filtering properties:', err);
+      setProperties([]);
       setError('Failed to filter properties');
     } finally {
       setLoading(false);
@@ -87,6 +93,10 @@ export function SearchPage() {
               <div className="text-red-600 text-center py-4">{error}</div>
             ) : loading ? (
               <div className="text-center py-4">Loading properties...</div>
+            ) : properties.length === 0 ? (
+              <div className="text-center py-4 text-secondary-light">
+                No properties found
+              </div>
             ) : (
               <>
                 <h2 className="text-xl font-semibold text-secondary mb-6">
@@ -117,6 +127,12 @@ export function SearchPage() {
                 className="text-sm text-primary hover:text-primary-dark transition-colors"
               >
                 View Amenities
+              </button>
+              <button
+                onClick={() => navigate('/invest')}
+                className="text-sm text-primary hover:text-primary-dark transition-colors"
+              >
+                Invest
               </button>
             </div>
           </div>

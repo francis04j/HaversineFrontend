@@ -7,6 +7,8 @@
 - push code to github
 - A github action should kick off and create a file in .github folder
 - git pull the github action to your local
-- Edit the github action file to make the app_location = "/dist and everything else ""
+- Edit the github action file to make the output_location = "/dist and everything else ""
 - push your changes
 Deploy should succeed
+
+Current location: https://brave-flower-0ab967203.4.azurestaticapps.net/amenities

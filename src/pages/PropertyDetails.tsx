@@ -316,15 +316,7 @@ export function PropertyDetails() {
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-xl shadow-search">
-                <h2 className="text-xl font-semibold text-secondary mb-4">Office Location</h2>
-                <div className="flex items-start text-secondary-light">
-                  <MapPin className="w-5 h-5 mr-2 mt-1 flex-shrink-0" />
-                  <span>{property.officeLocation}</span>
-                </div>
-              </div>
-            </div>
+         
           </div>
         </div>
       </main>

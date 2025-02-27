@@ -5,6 +5,7 @@ import { PropertyDetails } from './pages/PropertyDetails';
 import { UploadProperty } from './pages/UploadProperty';
 import { UploadAmenity } from './pages/UploadAmenity';
 import { AmenitiesList } from './pages/AmenitiesList';
+import { SearchAmenitiesByAddress } from './pages/SearchAmenitiesByAddress';
 import { InterestedAgents } from './pages/InterestedAgents';
 import { InvestPage } from './pages/InvestPage';
 
@@ -18,6 +19,7 @@ function App() {
           <Route path="/upload-property" element={<UploadProperty />} />
           <Route path="/upload-amenity" element={<UploadAmenity />} />
           <Route path="/amenities" element={<AmenitiesList />} />
+          <Route path="/search-amenities" element={<SearchAmenitiesByAddress />} />
           <Route path="/interested-agents" element={<InterestedAgents />} />
           <Route path="/invest" element={<InvestPage />} />
         </Routes>

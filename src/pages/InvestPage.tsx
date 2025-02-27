@@ -62,7 +62,7 @@ export function InvestPage() {
         <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
             <Search className="h-8 w-8 text-primary" />
-            <h1 className="ml-2 text-2xl font-bold text-primary">RentHub</h1>
+            <h1 className="ml-2 text-2xl font-bold text-primary">CloseBy</h1>
           </div>
         </div>
       </header>
@@ -136,13 +136,43 @@ export function InvestPage() {
         <div className="bg-secondary text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold mb-6">Ready to Start Your Investment Journey?</h2>
-            <p className="text-lg mb-8 max-w-2xl mx-auto">Join thousands of investors who have already discovered the benefits of property investment through RentHub</p>
+            <p className="text-lg mb-8 max-w-2xl mx-auto">Join thousands of investors who have already discovered the benefits of property investment through CloseBy</p>
             <button className={styles.searchButton}>
               Create Investment Account
             </button>
           </div>
         </div>
       </main>
+
+      <footer className="bg-white border-t border-neutral-200 mt-8">
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div className="text-sm text-secondary-light">
+              © {new Date().getFullYear()} CloseBy. All rights reserved.
+            </div>
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => navigate('/interested-agents')}
+                className="text-sm text-primary hover:text-primary-dark transition-colors"
+              >
+                Become an Agent
+              </button>
+              <button
+                onClick={() => navigate('/amenities')}
+                className="text-sm text-primary hover:text-primary-dark transition-colors"
+              >
+                View Amenities
+              </button>
+              <button
+                onClick={() => navigate('/invest')}
+                className="text-sm text-primary hover:text-primary-dark transition-colors"
+              >
+                Invest
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }

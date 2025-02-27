@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Property, NearbyAmenity } from '../types/property';
-import { Bed, Home, MapPin, Sofa, Clock, Search, Share2 } from 'lucide-react';
+import { Bed, Home, MapPin, Sofa, Clock, Search, Share2, Plus, X } from 'lucide-react';
 import { PropertyMap } from '../components/PropertyMap';
 import styles from '../styles/components/Input.module.css';
 import { getProperties } from '../services/api';
@@ -19,6 +19,8 @@ export function PropertyDetails() {
   const [shareMessage, setShareMessage] = useState('');
   const [nearbyAmenities, setNearbyAmenities] = useState<NearbyAmenity[]>([]);
   const [loadingAmenities, setLoadingAmenities] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('');
+  const [showSearchBox, setShowSearchBox] = useState(false);
 
   useEffect(() => {
     const fetchPropertyAndAmenities = async () => {
@@ -34,6 +36,15 @@ export function PropertyDetails() {
           setLoadingAmenities(true);
           const amenities = await getNearbyAmenities(foundProperty.location.address);
           setNearbyAmenities(amenities);
+          
+          // Set the active tab to the first amenity type if available
+          if (amenities.length > 0) {
+            const amenityTypes = [...new Set(amenities.map(a => a.category))];
+            if (amenityTypes.length > 0) {
+              setActiveTab(amenityTypes[0]);
+            }
+          }
+          
           setLoadingAmenities(false);
         } else {
           setError('Property not found');
@@ -56,14 +67,26 @@ export function PropertyDetails() {
     return <div className="text-center py-8 text-red-600">{error}</div>;
   }
 
-  // Group amenities by category
-  const amenitiesByCategory = nearbyAmenities.reduce((acc, amenity) => {
-    if (!acc[amenity.category]) {
-      acc[amenity.category] = [];
-    }
-    acc[amenity.category].push(amenity);
-    return acc;
-  }, {} as Record<string, typeof nearbyAmenities>);
+  // Get unique amenity categories for tabs
+  const amenityTypes = [...new Set([
+    ...nearbyAmenities.map(a => a.category),
+    ...searchResults.map(a => a.category)
+  ])];
+
+  // Filter amenities by selected tab
+  const filteredAmenities = activeTab 
+    ? [...nearbyAmenities, ...searchResults].filter(a => a.category === activeTab)
+    : [...nearbyAmenities, ...searchResults];
+
+  // Format amenity type for display
+  const formatAmenityType = (type: string): string => {
+    return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  // Count amenities by type
+  const getAmenityTypeCount = (type: string): number => {
+    return [...nearbyAmenities, ...searchResults].filter(a => a.category === type).length;
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +108,12 @@ export function PropertyDetails() {
       setSearchResults(prevResults => [...prevResults, newAmenity]);
       setSearchTerm('');
       setSearchDistance('');
+      
+      // Set active tab to the search result category
+      setActiveTab('search_result');
+      
+      // Hide search box after search
+      setShowSearchBox(false);
     }
   };
 
@@ -119,7 +148,7 @@ export function PropertyDetails() {
         <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
             <Search className="h-8 w-8 text-primary" />
-            <h1 className="ml-2 text-2xl font-bold text-primary">RentHub</h1>
+            <h1 className="ml-2 text-2xl font-bold text-primary">CloseBy</h1>
           </div>
         </div>
       </header>
@@ -174,7 +203,7 @@ export function PropertyDetails() {
                 </div>
                 <div className="flex items-center text-secondary">
                   <Clock className="w-5 h-5 mr-2" />
-                  <span className="capitalize">{property.letType.replace('_', ' ')}</span>
+                  <span className="capitalize">{property.letType}</span>
                 </div>
               </div>
 
@@ -191,37 +220,51 @@ export function PropertyDetails() {
                 </div>
                 <PropertyMap property={property} nearbyAmenities={nearbyAmenities} />
               </div>
-            </div>
 
-            <div className="space-y-6">
+              {/* Nearby Amenities Section - Now directly under the map */}
               <div className="bg-white p-6 rounded-xl shadow-search">
-                <h2 className="text-xl font-semibold text-secondary mb-4">Nearby Amenities</h2>
-                
-                <div className="mb-6">
-                  <form onSubmit={handleSearch} className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-secondary">
-                        Search for amenity
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          placeholder="Enter amenity name"
-                          className={`${styles.input} flex-1`}
-                        />
-                      </div>
-                    </div>
-                    <button
-                      type="submit"
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                    >
-                      <Search className="w-4 h-4" />
-                      Search
-                    </button>
-                  </form>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-secondary">Nearby Amenities</h2>
+                  <button
+                    onClick={() => setShowSearchBox(!showSearchBox)}
+                    className="p-2 rounded-full hover:bg-neutral-100 transition-colors"
+                    title={showSearchBox ? "Hide search" : "Search for amenities"}
+                  >
+                    {showSearchBox ? (
+                      <X className="w-5 h-5 text-secondary" />
+                    ) : (
+                      <Plus className="w-5 h-5 text-primary" />
+                    )}
+                  </button>
                 </div>
+                
+                {showSearchBox && (
+                  <div className="mb-6">
+                    <form onSubmit={handleSearch} className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-secondary">
+                          Search for amenity
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Enter amenity name"
+                            className={`${styles.input} flex-1`}
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                      >
+                        <Search className="w-4 h-4" />
+                        Search
+                      </button>
+                    </form>
+                  </div>
+                )}
 
                 <div className="space-y-6">
                   {loadingAmenities ? (
@@ -230,44 +273,50 @@ export function PropertyDetails() {
                     </div>
                   ) : (
                     <>
-                      {searchResults.length > 0 && (
-                        <div>
-                          <h3 className="font-medium text-secondary capitalize mb-2">Search Results</h3>
-                          <div className="space-y-2">
-                            {searchResults
-                              .sort((a, b) => a.distance - b.distance)
-                              .map((amenity) => (
-                                <div key={amenity.id} className="flex justify-between items-center text-sm">
-                                  <span className="text-secondary">{amenity.name}</span>
-                                  <span className="text-secondary-light">{amenity.distance}km</span>
-                                </div>
-                              ))}
+                      {/* Horizontal tabs for amenity types - with wrapping */}
+                      {amenityTypes.length > 0 && (
+                        <div className="mb-6 border-b border-neutral-200">
+                          <div className="flex flex-wrap gap-2 pb-2">
+                            {amenityTypes.map(type => (
+                              <button
+                                key={type}
+                                onClick={() => setActiveTab(type === activeTab ? '' : type)}
+                                className={`px-4 py-2 rounded-lg transition-colors ${
+                                  activeTab === type
+                                    ? 'bg-primary text-white'
+                                    : 'bg-neutral-100 text-secondary hover:bg-neutral-200'
+                                }`}
+                              >
+                                {formatAmenityType(type)} ({getAmenityTypeCount(type)})
+                              </button>
+                            ))}
                           </div>
                         </div>
                       )}
                       
-                      {Object.entries(amenitiesByCategory).map(([category, amenities]) => (
-                        <div key={category}>
-                          <h3 className="font-medium text-secondary capitalize mb-2">
-                            {category.replace(/_/g, ' ')}
-                          </h3>
-                          <div className="space-y-2">
-                            {amenities
-                              .sort((a, b) => a.distance - b.distance)
-                              .map((amenity) => (
-                                <div key={amenity.id} className="flex justify-between items-center text-sm">
-                                  <span className="text-secondary">{amenity.name}</span>
-                                  <span className="text-secondary-light">{amenity.distance}km</span>
-                                </div>
-                              ))}
+                      <div className="space-y-2">
+                        {filteredAmenities
+                          .sort((a, b) => a.distance - b.distance)
+                          .map((amenity) => (
+                            <div key={amenity.id} className="flex justify-between items-center text-sm p-2 hover:bg-neutral-50 rounded-lg">
+                              <span className="text-secondary">{amenity.name}</span>
+                              <span className="text-secondary-light">{amenity.distance}km</span>
+                            </div>
+                          ))}
+                          
+                        {filteredAmenities.length === 0 && (
+                          <div className="text-center py-4 text-secondary-light">
+                            No amenities found in this category
                           </div>
-                        </div>
-                      ))}
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
               </div>
+            </div>
 
+            <div className="space-y-6">
               <div className="bg-white p-6 rounded-xl shadow-search">
                 <h2 className="text-xl font-semibold text-secondary mb-4">Office Location</h2>
                 <div className="flex items-start text-secondary-light">
@@ -279,6 +328,36 @@ export function PropertyDetails() {
           </div>
         </div>
       </main>
+
+      <footer className="bg-white border-t border-neutral-200 mt-8">
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div className="text-sm text-secondary-light">
+              © {new Date().getFullYear()} CloseBy. All rights reserved.
+            </div>
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => navigate('/interested-agents')}
+                className="text-sm text-primary hover:text-primary-dark transition-colors"
+              >
+                Become an Agent
+              </button>
+              <button
+                onClick={() => navigate('/amenities')}
+                className="text-sm text-primary hover:text-primary-dark transition-colors"
+              >
+                View Amenities
+              </button>
+              <button
+                onClick={() => navigate('/invest')}
+                className="text-sm text-primary hover:text-primary-dark transition-colors"
+              >
+                Invest
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }

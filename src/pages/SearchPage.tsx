@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchFilters, SearchFilters as SearchFiltersType } from '../components/SearchFilters';
 import { PropertyList } from '../components/PropertyList';
-import { Search, Plus, Building2 } from 'lucide-react';
+import { Search, Plus, Building2, Navigation } from 'lucide-react';
 import { Property } from '../types/property';
 import { getProperties, searchProperties } from '../services/api';
 import styles from '../styles/components/Input.module.css';
@@ -11,19 +11,26 @@ export function SearchPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [apiSource, setApiSource] = useState<'azure' | 'local' | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProperties = async () => {
       try {
+        setLoading(true);
         const data = await getProperties();
-        // Ensure we have an array of properties
         setProperties(Array.isArray(data) ? data : []);
+        
+        // Determine API source based on console logs
+        // This is a simple heuristic and might not be 100% accurate
+        setApiSource(data.length > 0 ? 'azure' : 'local');
+        
         setError(null);
       } catch (err) {
         console.error('Error fetching properties:', err);
         setProperties([]);
         setError('Failed to fetch properties');
+        setApiSource(null);
       } finally {
         setLoading(false);
       }
@@ -36,7 +43,6 @@ export function SearchPage() {
     setLoading(true);
     try {
       const filteredProperties = await searchProperties(filters);
-      // Ensure we have an array of properties
       setProperties(Array.isArray(filteredProperties) ? filteredProperties : []);
       setError(null);
     } catch (err) {
@@ -65,6 +71,13 @@ export function SearchPage() {
               <p className="mt-1 text-sm text-secondary-light">Find places of interest near your property</p>
             </div>
             <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/search-amenities')}
+                className={`${styles.searchButton} !bg-secondary hover:!bg-secondary-light`}
+              >
+                <Navigation className="w-5 h-5 mr-2" />
+                Search Amenities
+              </button>
               <button
                 onClick={() => navigate('/upload-amenity')}
                 className={`${styles.searchButton} !bg-secondary hover:!bg-secondary-light`}
@@ -99,9 +112,16 @@ export function SearchPage() {
               </div>
             ) : (
               <>
-                <h2 className="text-xl font-semibold text-secondary mb-6">
-                  {properties.length} Properties Found
-                </h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold text-secondary">
+                    {properties.length} Properties Found
+                  </h2>
+                  {apiSource && (
+                    <div className="text-xs text-secondary-light bg-neutral-100 px-2 py-1 rounded-full">
+                      Data source: {apiSource === 'azure' ? 'Azure API' : 'Local API'}
+                    </div>
+                  )}
+                </div>
                 <PropertyList properties={properties} onPropertyClick={handlePropertyClick} />
               </>
             )}

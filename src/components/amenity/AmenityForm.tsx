@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AmenityCategory } from '../../types/amenity';
 import { LocationInput } from './LocationInput';
 import { ContactInput } from './ContactInput';
 import { Plus, X, Star } from 'lucide-react';
+import { getLocationData, LocationData } from '../../services/api';
 import styles from '../../styles/components/Input.module.css';
 
 interface AmenityFormProps {
@@ -13,9 +14,16 @@ interface AmenityFormProps {
 export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
-  const [formData, setFormData] = React.useState({
+  const [selectedCountry, setSelectedCountry] = useState('United Kingdom');
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedCounty, setSelectedCounty] = useState('');
+  const [locationData, setLocationData] = useState<LocationData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState({
     name: '',
-    category: 'gym' as AmenityCategory | string,
+    category: '' as AmenityCategory | string,
     createdBy: '',
     rating: 1,
     location: {
@@ -33,6 +41,43 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
     website: '',
     phone: ''
   });
+
+  useEffect(() => {
+    const fetchLocationData = async () => {
+      try {
+        const data = await getLocationData();
+        setLocationData(data);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load location data');
+        console.error('Error loading location data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLocationData();
+  }, []);
+
+  // Reset county when region changes
+  useEffect(() => {
+    setSelectedCounty('');
+  }, [selectedRegion]);
+
+  // Update location when country/region/county changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        address: {
+          ...prev.location.address,
+          country: selectedCountry,
+          city: selectedCounty || selectedRegion || ''
+        }
+      }
+    }));
+  }, [selectedCountry, selectedRegion, selectedCounty]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +138,17 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
     return stars;
   };
 
+  if (loading) {
+    return <div className="text-center py-4">Loading form data...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-600 text-center py-4">{error}</div>;
+  }
+
+  // Get counties for selected region
+  const counties = selectedRegion && locationData ? locationData.ukCountiesByRegion[selectedRegion] || [] : [];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
@@ -136,6 +192,67 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>
+              Country <span className="text-red-500">*</span>
+            </label>
+            <select
+              required
+              value={selectedCountry}
+              onChange={(e) => setSelectedCountry(e.target.value)}
+              className={styles.input}
+            >
+              {locationData?.countries.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>
+              Region <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={selectedRegion}
+              onChange={(e) => setSelectedRegion(e.target.value)}
+              className={styles.input}
+              disabled={selectedCountry !== 'United Kingdom'}
+              required={selectedCountry === 'United Kingdom'}
+            >
+              <option value="">Select a region</option>
+              {locationData?.ukRegions.map(region => (
+                <option key={region} value={region}>{region}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>
+              County/Area <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={selectedCounty}
+              onChange={(e) => setSelectedCounty(e.target.value)}
+              className={styles.input}
+              disabled={!selectedRegion || selectedCountry !== 'United Kingdom'}
+              required={selectedCountry === 'United Kingdom'}
+            >
+              <option value="">Select a county/area</option>
+              {counties.map(county => (
+                <option key={county} value={county}>{county}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <LocationInput
+          location={formData.location}
+          onChange={(location) => handleChange('location', location)}
+          required={true}
+          simplified={true}
+        />
+
         <div className={styles.inputGroup}>
           <label className={styles.label}>
             Category <span className="text-red-500">*</span>
@@ -174,18 +291,18 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
                   value={formData.category}
                   onChange={(e) => handleChange('category', e.target.value)}
                   className={styles.input}
+                  disabled={!selectedCounty && selectedCountry === 'United Kingdom'}
                 >
                   <option value="">Select a category</option>
-                  <option value="gym">Gym</option>
-                  <option value="park">Park</option>
-                  <option value="school">School</option>
-                  <option value="hospital">Hospital</option>
-                  <option value="train_station">Train Station</option>
-                  <option value="pub">Pub</option>
-                  <option value="yoga">Yoga Studio</option>
-                  <option value="nursery">Nursery</option>
-                  {formData.category && !['gym', 'park', 'school', 'hospital', 'train_station', 'pub', 'yoga', 'nursery'].includes(formData.category) && (
-                    <option value={formData.category}>{formData.category.replace(/_/g, ' ')}</option>
+                  {locationData?.commonAmenityCategories.map(category => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                  {formData.category && !locationData?.commonAmenityCategories.find(c => c.value === formData.category) && (
+                    <option value={formData.category}>
+                      {formData.category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </option>
                   )}
                 </select>
                 <button
@@ -199,13 +316,6 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
             )}
           </div>
         </div>
-
-        <LocationInput
-          location={formData.location}
-          onChange={(location) => handleChange('location', location)}
-          required={true}
-          simplified={true}
-        />
 
         <ContactInput
           website={formData.website}

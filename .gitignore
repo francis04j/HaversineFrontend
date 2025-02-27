@@ -27,3 +27,6 @@ dist-ssr
 .netlify
 .env
 supabase/migrations/20250213165022_quick_hall.sql
+
+project/
+project*

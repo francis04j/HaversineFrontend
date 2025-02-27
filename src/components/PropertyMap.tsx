@@ -14,16 +14,37 @@ export function PropertyMap({ property, nearbyAmenities }: PropertyMapProps) {
 
   useEffect(() => {
     const initMap = async () => {
-      const google = await loader.load();
-      
+      try {
+        const google = await loader.load();
+        
+        if (!mapRef.current) return;
+
+        // Validate coordinates before creating the map
+        const lat = property.location.latitude;
+        const lng = property.location.longitude;
+
+        if (!isValidCoordinate(lat, lng)) {
+          console.error('Invalid coordinates:', { lat, lng });
+          // Create a fallback center (London)
+          const fallbackCenter = { lat: 51.5074, lng: -0.1278 };
+          createMap(google, fallbackCenter);
+          return;
+        }
+
+        // Create the map with valid coordinates
+        const center = { lat, lng };
+        createMap(google, center);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
+    };
+
+    const createMap = (google: typeof globalThis.google, center: google.maps.LatLngLiteral) => {
       if (!mapRef.current) return;
 
       // Create the map centered on the property
       const map = new google.maps.Map(mapRef.current, {
-        center: { 
-          lat: property.location.latitude, 
-          lng: property.location.longitude 
-        },
+        center,
         zoom: 14,
         styles: [
           {
@@ -38,10 +59,7 @@ export function PropertyMap({ property, nearbyAmenities }: PropertyMapProps) {
 
       // Add property marker
       const propertyMarker = new google.maps.Marker({
-        position: { 
-          lat: property.location.latitude, 
-          lng: property.location.longitude 
-        },
+        position: center,
         map,
         title: property.title,
         icon: {
@@ -73,11 +91,14 @@ export function PropertyMap({ property, nearbyAmenities }: PropertyMapProps) {
 
       // Add markers for nearby amenities
       nearbyAmenities.forEach(amenity => {
+        // Generate random offset for amenity markers (for demo purposes)
+        const lat = center.lat + (Math.random() - 0.5) * 0.01;
+        const lng = center.lng + (Math.random() - 0.5) * 0.01;
+        
+        if (!isValidCoordinate(lat, lng)) return;
+
         const marker = new google.maps.Marker({
-          position: { 
-            lat: property.location.latitude + (Math.random() - 0.5) * 0.01, 
-            lng: property.location.longitude + (Math.random() - 0.5) * 0.01 
-          },
+          position: { lat, lng },
           map,
           title: amenity.name,
           icon: {
@@ -117,6 +138,20 @@ export function PropertyMap({ property, nearbyAmenities }: PropertyMapProps) {
       markersRef.current = [];
     };
   }, [property, nearbyAmenities]);
+
+  // Helper function to validate coordinates
+  const isValidCoordinate = (lat: any, lng: any): boolean => {
+    return (
+      typeof lat === 'number' && 
+      typeof lng === 'number' && 
+      !isNaN(lat) && 
+      !isNaN(lng) && 
+      isFinite(lat) && 
+      isFinite(lng) &&
+      lat >= -90 && lat <= 90 &&
+      lng >= -180 && lng <= 180
+    );
+  };
 
   return (
     <div 

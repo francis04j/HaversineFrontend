@@ -20,12 +20,15 @@ export function LocationInput({ location, onChange, required = false, simplified
     });
   };
 
-  const handleCoordinatesChange = (field: keyof AmenityLocation['coordinates'], value: number) => {
+  const handleCoordinatesChange = (field: keyof AmenityLocation['coordinates'], value: string) => {
+    // Convert the string value to a number, handling empty strings
+    const numValue = value === '' ? 0 : parseFloat(value);
+    
     onChange({
       ...location,
       coordinates: {
         ...location.coordinates,
-        [field]: value
+        [field]: numValue
       }
     });
   };
@@ -99,10 +102,10 @@ export function LocationInput({ location, onChange, required = false, simplified
           <input
             type="number"
             step="any"
-            value={location.coordinates.latitude}
-            onChange={(e) => handleCoordinatesChange('latitude', Number(e.target.value))}
+            value={location.coordinates.latitude || ''}
+            onChange={(e) => handleCoordinatesChange('latitude', e.target.value)}
             className={styles.input}
-            placeholder="Enter latitude"
+            placeholder="Enter latitude (e.g., 51.5074)"
           />
         </div>
 
@@ -111,10 +114,10 @@ export function LocationInput({ location, onChange, required = false, simplified
           <input
             type="number"
             step="any"
-            value={location.coordinates.longitude}
-            onChange={(e) => handleCoordinatesChange('longitude', Number(e.target.value))}
+            value={location.coordinates.longitude || ''}
+            onChange={(e) => handleCoordinatesChange('longitude', e.target.value)}
             className={styles.input}
-            placeholder="Enter longitude"
+            placeholder="Enter longitude (e.g., -0.1278)"
           />
         </div>
       </div>

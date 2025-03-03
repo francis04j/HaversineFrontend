@@ -56,9 +56,11 @@ export function SearchPage() {
     const originalConsoleLog = console.log;
     let lastLog = '';
     
-    console.log = function(message) {
-      lastLog = message;
-      originalConsoleLog.apply(console, arguments);
+    console.log = function(...args: any[]) {
+      if (args.length > 0 && typeof args[0] === 'string') {
+        lastLog = args[0];
+      }
+      originalConsoleLog.apply(console, args);
     };
     
     // Restore original console.log after a short delay

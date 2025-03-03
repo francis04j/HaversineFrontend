@@ -41,9 +41,10 @@ export interface AzureAmenity {
   active: boolean;
   rating: number;
   modifiedBy: string;
-  countryId: number | null;
+  countryId: number | string;
   countyId: string | null;
   regionId: string | null;
+  distanceMiles: number;
 }
 
 export interface AzureAmenityResponse {

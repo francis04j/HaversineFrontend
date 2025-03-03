@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Navigation, Star } from 'lucide-react';
-import { loader } from '../services/google-maps-loader';
 import styles from '../styles/components/Input.module.css';
 import { getAmenitiesByAddress, AzureAmenity } from '../services/api';
 
@@ -93,7 +92,7 @@ export function SearchAmenitiesByAddress() {
 
   // Format amenity type for display
   const formatAmenityType = (type: string): string => {
-    return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
   };
 
   // Count amenities by type
@@ -335,7 +334,7 @@ export function SearchAmenitiesByAddress() {
                       <div>
                         <h3 className="font-medium text-secondary">{amenity.name}</h3>
                         <p className="text-sm text-secondary-light mt-1">
-                          {amenity.amenityType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          {amenity.amenityType.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                         </p>
                         <div className="flex items-start mt-2">
                           <MapPin className="w-4 h-4 mt-1 mr-2 flex-shrink-0 text-secondary-light" />

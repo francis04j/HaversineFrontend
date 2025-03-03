@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { Property, NearbyAmenity } from '../types/property';
-import type { Amenity, AzureAmenity, AzureAmenityResponse } from '../types/amenity';
+import type { Amenity } from '../types/amenity';
 import type { SearchFilters } from '../components/SearchFilters';
 import { getCache, setCache, CACHE_KEYS, isLocationData } from '../utils/cache';
 
@@ -120,6 +120,36 @@ export async function uploadProperty(property: Omit<Property, 'id'>) {
     console.error('Failed to upload property to Azure API', error);
     throw error;
   }
+}
+
+// Define the AzureAmenity interface
+export interface AzureAmenity {
+  id: number;
+  modifiedDate: string;
+  name: string;
+  address: string;
+  locality: string | null;
+  latitude: number;
+  longitude: number;
+  amenityType: string;
+  amenityUrl: string;
+  phone: string;
+  active: boolean;
+  rating: number;
+  modifiedBy: string;
+  countryId: number | string;
+  countyId: string | null;
+  regionId: string | null;
+  distanceMiles: number;
+}
+
+// Define the AzureAmenityResponse interface
+export interface AzureAmenityResponse {
+  totalRecords: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  data: AzureAmenity[];
 }
 
 export async function getAmenities(page: number = 1, pageSize: number = 50) {

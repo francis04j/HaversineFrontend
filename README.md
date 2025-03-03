@@ -1,5 +1,7 @@
 # HaversineFrontend
 
+npx husky init && chmod +x .husky/pre-commit
+
 ## How to deploy
 - Create repo for project
 - Make sure engine is included in package.json "engines": { "node": ">=18.0.0" }, as Github may detect lower version which may result in error.

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { loader } from '../services/google-maps-loader';
 import { Property, NearbyAmenity } from '../types/property';
 
@@ -11,6 +11,7 @@ export function PropertyMap({ property, nearbyAmenities }: PropertyMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   useEffect(() => {
     const initMap = async () => {
@@ -19,23 +20,26 @@ export function PropertyMap({ property, nearbyAmenities }: PropertyMapProps) {
         
         if (!mapRef.current) return;
 
-        // Validate coordinates before creating the map
-        const lat = property.location.lat;
-        const lng = property.location.lng;
+        // Extract coordinates from property location
+        const lat = property.location.latitude;
+        const lng = property.location.longitude;
 
         if (!isValidCoordinate(lat, lng)) {
           console.error('Invalid coordinates:', { lat, lng });
           // Create a fallback center (London)
           const fallbackCenter = { lat: 51.5074, lng: -0.1278 };
           createMap(google, fallbackCenter);
+          setMapError("Using default map location as property coordinates are invalid");
           return;
         }
 
         // Create the map with valid coordinates
         const center = { lat, lng };
         createMap(google, center);
+        setMapError(null);
       } catch (error) {
         console.error('Error initializing map:', error);
+        setMapError("Failed to load map. Please try again later.");
       }
     };
 
@@ -154,9 +158,16 @@ export function PropertyMap({ property, nearbyAmenities }: PropertyMapProps) {
   };
 
   return (
-    <div 
-      ref={mapRef} 
-      className="w-full h-[400px] rounded-xl overflow-hidden shadow-search"
-    />
+    <div className="space-y-2">
+      {mapError && (
+        <div className="text-amber-600 text-sm bg-amber-50 p-2 rounded">
+          {mapError}
+        </div>
+      )}
+      <div 
+        ref={mapRef} 
+        className="w-full h-[400px] rounded-xl overflow-hidden shadow-search"
+      />
+    </div>
   );
 }

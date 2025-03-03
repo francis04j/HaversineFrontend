@@ -30,7 +30,7 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
       address: {
         addressLine: '',
         city: '',
-        country: '',
+        country: 'United Kingdom',
         postcode: ''
       },
       coordinates: {
@@ -39,7 +39,10 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
       }
     },
     website: '',
-    phone: ''
+    phone: '',
+    countryId: 0,
+    regionId: '',
+    countyId: ''
   });
 
   useEffect(() => {
@@ -47,6 +50,23 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
       try {
         const data = await getLocationData();
         setLocationData(data);
+        
+        // Find London region ID
+        const londonRegion = data.ukRegions.find(region => region.name === 'London');
+        if (londonRegion) {
+          setSelectedRegion(londonRegion.id);
+          
+          // Set a default London county after a short delay to ensure the counties are loaded
+          setTimeout(() => {
+            const londonCounties = data.ukCountiesByRegion.filter(county => 
+              county.regionId === londonRegion.id
+            );
+            if (londonCounties.length > 0) {
+              setSelectedCounty(londonCounties[0].id);
+            }
+          }, 100);
+        }
+        
         setError(null);
       } catch (err) {
         setError('Failed to load location data');
@@ -59,13 +79,41 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
     fetchLocationData();
   }, []);
 
-  // Reset county when region changes
+  // Update counties when region changes
   useEffect(() => {
-    setSelectedCounty('');
-  }, [selectedRegion]);
+    if (selectedRegion && locationData) {
+      const counties = locationData.ukCountiesByRegion.filter(
+        county => county.regionId === selectedRegion
+      );
+      
+      if (counties.length > 0) {
+        // Select the first county in the list
+        setSelectedCounty(counties[0].id);
+      } else {
+        setSelectedCounty('');
+      }
+    } else {
+      setSelectedCounty('');
+    }
+  }, [selectedRegion, locationData]);
+
+  // Reset category when county changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      category: ''
+    }));
+  }, [selectedCounty]);
 
   // Update location when country/region/county changes
   useEffect(() => {
+    // Find the county name from the ID
+    let countyName = '';
+    if (selectedCounty && locationData) {
+      const county = locationData.ukCountiesByRegion.find(c => c.id === selectedCounty);
+      countyName = county ? county.name : '';
+    }
+
     setFormData(prev => ({
       ...prev,
       location: {
@@ -73,11 +121,14 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
         address: {
           ...prev.location.address,
           country: selectedCountry,
-          city: selectedCounty || selectedRegion || ''
+          city: countyName || ''
         }
-      }
+      },
+      countryId: 1, // Assuming UK is ID 1
+      regionId: selectedRegion,
+      countyId: selectedCounty
     }));
-  }, [selectedCountry, selectedRegion, selectedCounty]);
+  }, [selectedCountry, selectedRegion, selectedCounty, locationData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,7 +198,9 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
   }
 
   // Get counties for selected region
-  const counties = selectedRegion && locationData ? locationData.ukCountiesByRegion[selectedRegion] || [] : [];
+  const counties = selectedRegion && locationData?.ukCountiesByRegion 
+    ? locationData.ukCountiesByRegion.filter(county => county.regionId === selectedRegion)
+    : [];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -204,7 +257,7 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
               className={styles.input}
             >
               {locationData?.countries.map(country => (
-                <option key={country} value={country}>{country}</option>
+                <option key={country.id} value={country.name}>{country.name}</option>
               ))}
             </select>
           </div>
@@ -217,12 +270,10 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
               className={styles.input}
-              disabled={selectedCountry !== 'United Kingdom'}
-              required={selectedCountry === 'United Kingdom'}
             >
               <option value="">Select a region</option>
               {locationData?.ukRegions.map(region => (
-                <option key={region} value={region}>{region}</option>
+                <option key={region.id} value={region.id}>{region.name}</option>
               ))}
             </select>
           </div>
@@ -235,12 +286,11 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
               value={selectedCounty}
               onChange={(e) => setSelectedCounty(e.target.value)}
               className={styles.input}
-              disabled={!selectedRegion || selectedCountry !== 'United Kingdom'}
-              required={selectedCountry === 'United Kingdom'}
+              disabled={!selectedRegion}
             >
               <option value="">Select a county/area</option>
               {counties.map(county => (
-                <option key={county} value={county}>{county}</option>
+                <option key={county.id} value={county.id}>{county.name}</option>
               ))}
             </select>
           </div>
@@ -291,7 +341,7 @@ export function AmenityForm({ onSubmit, isSubmitting }: AmenityFormProps) {
                   value={formData.category}
                   onChange={(e) => handleChange('category', e.target.value)}
                   className={styles.input}
-                  disabled={!selectedCounty && selectedCountry === 'United Kingdom'}
+                  disabled={!selectedCounty}
                 >
                   <option value="">Select a category</option>
                   {locationData?.commonAmenityCategories.map(category => (

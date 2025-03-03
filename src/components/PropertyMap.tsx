@@ -20,8 +20,8 @@ export function PropertyMap({ property, nearbyAmenities }: PropertyMapProps) {
         if (!mapRef.current) return;
 
         // Validate coordinates before creating the map
-        const lat = property.location.latitude;
-        const lng = property.location.longitude;
+        const lat = property.location.lat;
+        const lng = property.location.lng;
 
         if (!isValidCoordinate(lat, lng)) {
           console.error('Invalid coordinates:', { lat, lng });

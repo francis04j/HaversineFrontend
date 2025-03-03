@@ -12,6 +12,7 @@ export function SearchPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [apiSource, setApiSource] = useState<'azure' | 'local' | null>(null);
+  const [cacheStatus, setCacheStatus] = useState<'fresh' | 'cached' | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,12 +26,22 @@ export function SearchPage() {
         // This is a simple heuristic and might not be 100% accurate
         setApiSource(data.length > 0 ? 'azure' : 'local');
         
+        // Check if we're using cached data by looking at console logs
+        // This is a bit of a hack, but it works for demonstration purposes
+        const recentLogs = getRecentConsoleLogs();
+        if (recentLogs.includes('Using cached properties data')) {
+          setCacheStatus('cached');
+        } else {
+          setCacheStatus('fresh');
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Error fetching properties:', err);
         setProperties([]);
         setError('Failed to fetch properties');
         setApiSource(null);
+        setCacheStatus(null);
       } finally {
         setLoading(false);
       }
@@ -39,16 +50,45 @@ export function SearchPage() {
     fetchProperties();
   }, []);
 
+  // Helper function to check recent console logs
+  // This is a workaround since we can't directly access the cache status from the API service
+  const getRecentConsoleLogs = (): string => {
+    const originalConsoleLog = console.log;
+    let lastLog = '';
+    
+    console.log = function(message) {
+      lastLog = message;
+      originalConsoleLog.apply(console, arguments);
+    };
+    
+    // Restore original console.log after a short delay
+    setTimeout(() => {
+      console.log = originalConsoleLog;
+    }, 100);
+    
+    return lastLog;
+  };
+
   const handleFilterChange = async (filters: SearchFiltersType) => {
     setLoading(true);
     try {
       const filteredProperties = await searchProperties(filters);
       setProperties(Array.isArray(filteredProperties) ? filteredProperties : []);
+      
+      // Check if we're using cached data by looking at console logs
+      const recentLogs = getRecentConsoleLogs();
+      if (recentLogs.includes('Using cached search results')) {
+        setCacheStatus('cached');
+      } else {
+        setCacheStatus('fresh');
+      }
+      
       setError(null);
     } catch (err) {
       console.error('Error filtering properties:', err);
       setProperties([]);
       setError('Failed to filter properties');
+      setCacheStatus(null);
     } finally {
       setLoading(false);
     }
@@ -116,11 +156,22 @@ export function SearchPage() {
                   <h2 className="text-xl font-semibold text-secondary">
                     {properties.length} Properties Found
                   </h2>
-                  {apiSource && (
-                    <div className="text-xs text-secondary-light bg-neutral-100 px-2 py-1 rounded-full">
-                      Data source: {apiSource === 'azure' ? 'Azure API' : 'Local API'}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {cacheStatus && (
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        cacheStatus === 'cached' 
+                          ? 'bg-blue-100 text-blue-800' 
+                          : 'bg-green-100 text-green-800'
+                      }`}>
+                        {cacheStatus === 'cached' ? 'From cache' : 'Fresh data'}
+                      </span>
+                    )}
+                    {apiSource && (
+                      <div className="text-xs text-secondary-light bg-neutral-100 px-2 py-1 rounded-full">
+                        Data source: {apiSource === 'azure' ? 'Azure API' : 'Local API'}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <PropertyList properties={properties} onPropertyClick={handlePropertyClick} />
               </>

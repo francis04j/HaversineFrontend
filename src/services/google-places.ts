@@ -1,7 +1,48 @@
 import { loader } from './google-maps-loader';
 import type { NearbyAmenity } from '../types/property';
+import axios from 'axios';
+
+interface AmenityResponse {
+  id: number;
+  name: string;
+  address: string;
+  locality: string | null;
+  amenityUrl: string;
+  amenityType: string;
+  distanceMiles: number;
+  phone?: string;
+}
 
 export async function getNearbyAmenities(address: string): Promise<NearbyAmenity[]> {
+  try {
+    // Encode the address for URL
+    const encodedAddress = encodeURIComponent(address);
+    
+    // Call the Azure API endpoint
+    const response = await axios.get<AmenityResponse[]>(
+      `https://app-250213181732.azurewebsites.net/api/amenities/${encodedAddress}`
+    );
+    
+    // Convert the API response to NearbyAmenity format
+    const nearbyAmenities = response.data.map((item): NearbyAmenity => ({
+      id: `azure-${item.id}`,
+      name: item.name,
+      category: item.amenityType,
+      // Convert miles to kilometers (1 mile = 1.60934 km)
+      distance: Number((item.distanceMiles * 1.60934).toFixed(1))
+    }));
+    
+    return nearbyAmenities;
+  } catch (error) {
+    console.error('Error fetching nearby amenities from Azure API:', error);
+    
+    // Fallback to Google Places API if Azure API fails
+    return fallbackToGooglePlaces(address);
+  }
+}
+
+// Fallback function that uses the original Google Places implementation
+async function fallbackToGooglePlaces(address: string): Promise<NearbyAmenity[]> {
   try {
     const google = await loader.load();
     const geocoder = new google.maps.Geocoder();
@@ -66,7 +107,7 @@ export async function getNearbyAmenities(address: string): Promise<NearbyAmenity
 
     return nearbyAmenities;
   } catch (error) {
-    console.error('Error fetching nearby amenities:', error);
+    console.error('Error in Google Places fallback:', error);
     return []; // Return empty array on error
   }
 }

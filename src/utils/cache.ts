@@ -50,7 +50,7 @@ export function isLocationData(data: any): data is LocationData {
     data &&
     Array.isArray(data.countries) &&
     Array.isArray(data.ukRegions) &&
-    typeof data.ukCountiesByRegion === 'object' &&
+    Array.isArray(data.ukCountiesByRegion) &&
     Array.isArray(data.commonAmenityCategories)
   );
 }

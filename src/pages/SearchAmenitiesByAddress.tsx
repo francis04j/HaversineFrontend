@@ -1,22 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Navigation } from 'lucide-react';
+import { Search, MapPin, Navigation, Star } from 'lucide-react';
 import { loader } from '../services/google-maps-loader';
 import styles from '../styles/components/Input.module.css';
-import axios from 'axios';
+import { getAmenitiesByAddress, AzureAmenity } from '../services/api';
 
 type SearchType = 'address' | 'postcode' | 'coordinates';
-
-interface AmenityResponse {
-  id: number;
-  name: string;
-  address: string;
-  locality: string | null;
-  amenityUrl: string;
-  amenityType: string;
-  distanceMiles: number;
-  phone?: string;
-}
 
 export function SearchAmenitiesByAddress() {
   const navigate = useNavigate();
@@ -26,10 +15,11 @@ export function SearchAmenitiesByAddress() {
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [radius, setRadius] = useState('3');
-  const [amenities, setAmenities] = useState<AmenityResponse[]>([]);
+  const [amenities, setAmenities] = useState<AzureAmenity[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('');
+  const [cacheStatus, setCacheStatus] = useState<'fresh' | 'cached' | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +27,7 @@ export function SearchAmenitiesByAddress() {
     setError(null);
     setAmenities([]);
     setActiveTab('');
+    setCacheStatus(null);
 
     try {
       let searchText = '';
@@ -54,20 +45,15 @@ export function SearchAmenitiesByAddress() {
         }
       }
 
-      // Encode the search text for URL
-      const encodedSearchText = encodeURIComponent(searchText);
-      
-      // Call the Azure API endpoint
-      const response = await axios.get<AmenityResponse[]>(
-        `https://app-250213181732.azurewebsites.net/api/amenities/${encodedSearchText}`
-      );
+      // Use the API service to get amenities by address
+      const amenitiesData = await getAmenitiesByAddress(searchText);
       
       // Convert miles to kilometers for radius filtering (1 mile = 1.60934 km)
       const radiusKm = parseFloat(radius);
       const radiusMiles = radiusKm / 1.60934;
       
       // Filter by radius if needed
-      const filteredAmenities = response.data.filter(amenity => 
+      const filteredAmenities = amenitiesData.filter(amenity => 
         !radiusKm || amenity.distanceMiles <= radiusMiles
       );
       
@@ -75,6 +61,7 @@ export function SearchAmenitiesByAddress() {
       const sortedAmenities = filteredAmenities.sort((a, b) => a.distanceMiles - b.distanceMiles);
       
       setAmenities(sortedAmenities);
+      setCacheStatus('fresh'); // Assuming fresh data for now
       
       // Set the active tab to the first amenity type if available
       if (sortedAmenities.length > 0) {
@@ -112,6 +99,37 @@ export function SearchAmenitiesByAddress() {
   // Count amenities by type
   const getAmenityTypeCount = (type: string): number => {
     return amenities.filter(a => a.amenityType === type).length;
+  };
+
+  // Format rating as stars
+  const renderRatingStars = (rating: number = 0) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    for (let i = 1; i <= 5; i++) {
+      if (i <= fullStars) {
+        stars.push(<Star key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" />);
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        stars.push(
+          <div key={i} className="relative">
+            <Star className="w-4 h-4 text-gray-300" fill="currentColor" />
+            <div className="absolute inset-0 overflow-hidden w-1/2">
+              <Star className="w-4 h-4 text-yellow-400" fill="currentColor" />
+            </div>
+          </div>
+        );
+      } else {
+        stars.push(<Star key={i} className="w-4 h-4 text-gray-300" fill="currentColor" />);
+      }
+    }
+    
+    return (
+      <div className="flex items-center">
+        {stars}
+        {rating > 0 && <span className="ml-1 text-xs text-secondary-light">({rating.toFixed(1)})</span>}
+      </div>
+    );
   };
 
   return (
@@ -273,9 +291,20 @@ export function SearchAmenitiesByAddress() {
 
           {amenities.length > 0 && (
             <div className="bg-white rounded-xl shadow-search p-6">
-              <h2 className="text-xl font-semibold text-secondary mb-6">
-                Nearby Amenities
-              </h2>
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-secondary mb-6">
+                  Nearby Amenities
+                </h2>
+                {cacheStatus && (
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    cacheStatus === 'cached' 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'bg-green-100 text-green-800'
+                  }`}>
+                    {cacheStatus === 'cached' ? 'From cache' : 'Fresh data'}
+                  </span>
+                )}
+              </div>
               
               {/* Horizontal tabs for amenity types - now with wrapping */}
               <div className="mb-6 border-b border-neutral-200">
@@ -290,7 +319,7 @@ export function SearchAmenitiesByAddress() {
                           : 'bg-neutral-100 text-secondary hover:bg-neutral-200'
                       }`}
                     >
-                      {formatAmenityType(type)}
+                      {formatAmenityType(type)} ({getAmenityTypeCount(type)})
                     </button>
                   ))}
                 </div>
@@ -315,6 +344,11 @@ export function SearchAmenitiesByAddress() {
                             {amenity.locality && <p>{amenity.locality}</p>}
                           </div>
                         </div>
+                        {amenity.rating && (
+                          <div className="mt-2">
+                            {renderRatingStars(amenity.rating)}
+                          </div>
+                        )}
                       </div>
                       <div className="text-right">
                         <span className="text-sm font-medium text-primary">
@@ -325,8 +359,8 @@ export function SearchAmenitiesByAddress() {
                         </p>
                       </div>
                     </div>
-                    {amenity.amenityUrl && (
-                      <div className="mt-3 pt-3 border-t border-neutral-100 text-sm">
+                    <div className="mt-3 pt-3 border-t border-neutral-100 text-sm">
+                      {amenity.amenityUrl && (
                         <a
                           href={amenity.amenityUrl}
                           target="_blank"
@@ -335,18 +369,24 @@ export function SearchAmenitiesByAddress() {
                         >
                           View on Map
                         </a>
-                        {amenity.phone && (
-                          <a
-                            href={`tel:${amenity.phone}`}
-                            className="text-primary hover:underline"
-                          >
-                            {amenity.phone}
-                          </a>
-                        )}
-                      </div>
-                    )}
+                      )}
+                      {amenity.phone && amenity.phone !== 'Unknown' && (
+                        <a
+                          href={`tel:${amenity.phone}`}
+                          className="text-primary hover:underline"
+                        >
+                          {amenity.phone}
+                        </a>
+                      )}
+                    </div>
                   </div>
                 ))}
+                
+                {filteredAmenities.length === 0 && (
+                  <div className="text-center py-4 text-secondary-light">
+                    No amenities found in this category
+                  </div>
+                )}
               </div>
             </div>
           )}

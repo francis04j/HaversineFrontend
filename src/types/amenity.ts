@@ -22,4 +22,34 @@ export interface Amenity {
   phone?: string;
   createdBy: string;
   rating: number;
+  countryId?: number | string;
+  regionId?: string;
+  countyId?: string;
+}
+
+export interface AzureAmenity {
+  id: number;
+  modifiedDate: string;
+  name: string;
+  address: string;
+  locality: string | null;
+  latitude: number;
+  longitude: number;
+  amenityType: string;
+  amenityUrl: string;
+  phone: string;
+  active: boolean;
+  rating: number;
+  modifiedBy: string;
+  countryId: number | null;
+  countyId: string | null;
+  regionId: string | null;
+}
+
+export interface AzureAmenityResponse {
+  totalRecords: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  data: AzureAmenity[];
 }

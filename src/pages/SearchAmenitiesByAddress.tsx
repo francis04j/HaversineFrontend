@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Navigation, Star } from 'lucide-react';
+import { MapPin, Navigation, Star } from 'lucide-react';
+import { Header } from '../components/Header';
 import styles from '../styles/components/Input.module.css';
 import { getAmenitiesByAddress, AzureAmenity } from '../services/api';
 
@@ -35,7 +36,6 @@ export function SearchAmenitiesByAddress() {
         if (!latitude || !longitude) {
           throw new Error('Please enter both latitude and longitude');
         }
-        // For coordinates, create a formatted string
         searchText = `${latitude},${longitude}`;
       } else {
         searchText = searchType === 'address' ? address : postcode;
@@ -44,25 +44,20 @@ export function SearchAmenitiesByAddress() {
         }
       }
 
-      // Use the API service to get amenities by address
       const amenitiesData = await getAmenitiesByAddress(searchText);
       
-      // Convert miles to kilometers for radius filtering (1 mile = 1.60934 km)
       const radiusKm = parseFloat(radius);
       const radiusMiles = radiusKm / 1.60934;
       
-      // Filter by radius if needed
       const filteredAmenities = amenitiesData.filter(amenity => 
         !radiusKm || amenity.distanceMiles <= radiusMiles
       );
       
-      // Sort by distance
       const sortedAmenities = filteredAmenities.sort((a, b) => a.distanceMiles - b.distanceMiles);
       
       setAmenities(sortedAmenities);
-      setCacheStatus('fresh'); // Assuming fresh data for now
+      setCacheStatus('fresh');
       
-      // Set the active tab to the first amenity type if available
       if (sortedAmenities.length > 0) {
         const amenityTypes = [...new Set(sortedAmenities.map(a => a.amenityType))];
         if (amenityTypes.length > 0) {
@@ -77,30 +72,24 @@ export function SearchAmenitiesByAddress() {
     }
   };
 
-  // Helper function to convert miles to kilometers
   const milesToKm = (miles: number): number => {
     return miles * 1.60934;
   };
 
-  // Get unique amenity types for tabs
   const amenityTypes = [...new Set(amenities.map(a => a.amenityType))];
 
-  // Filter amenities by selected tab
   const filteredAmenities = activeTab 
     ? amenities.filter(a => a.amenityType === activeTab)
     : amenities;
 
-  // Format amenity type for display
   const formatAmenityType = (type: string): string => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
   };
 
-  // Count amenities by type
   const getAmenityTypeCount = (type: string): number => {
     return amenities.filter(a => a.amenityType === type).length;
   };
 
-  // Format rating as stars
   const renderRatingStars = (rating: number = 0) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -132,17 +121,8 @@ export function SearchAmenitiesByAddress() {
   };
 
   return (
-    <>
-      <header className="bg-white border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-              <Search className="h-8 w-8 text-primary" />
-              <h1 className="ml-2 text-2xl font-bold text-primary">CloseBy</h1>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col">
+      <Header />
 
       <main className="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="space-y-8">
@@ -161,7 +141,7 @@ export function SearchAmenitiesByAddress() {
           <div className="bg-white rounded-xl shadow-search p-6">
             <form onSubmit={handleSearch} className="space-y-6">
               <div className="space-y-4">
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     type="button"
                     onClick={() => setSearchType('address')}
@@ -230,7 +210,7 @@ export function SearchAmenitiesByAddress() {
                 )}
 
                 {searchType === 'coordinates' && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className={styles.inputGroup}>
                       <label className={styles.label}>Latitude</label>
                       <input
@@ -305,7 +285,6 @@ export function SearchAmenitiesByAddress() {
                 )}
               </div>
               
-              {/* Horizontal tabs for amenity types - now with wrapping */}
               <div className="mb-6 border-b border-neutral-200">
                 <div className="flex flex-wrap gap-2 pb-2">
                   {amenityTypes.map(type => (
@@ -421,6 +400,6 @@ export function SearchAmenitiesByAddress() {
           </div>
         </div>
       </footer>
-    </>
+    </div>
   );
 }

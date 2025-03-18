@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchFilters, SearchFilters as SearchFiltersType } from '../components/SearchFilters';
 import { PropertyList } from '../components/PropertyList';
-import { Search, Plus, Building2, Navigation } from 'lucide-react';
+import { Header } from '../components/Header';
 import { Property } from '../types/property';
 import { getProperties, searchProperties } from '../services/api';
-import styles from '../styles/components/Input.module.css';
 
 export function SearchPage() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -22,12 +21,8 @@ export function SearchPage() {
         const data = await getProperties();
         setProperties(Array.isArray(data) ? data : []);
         
-        // Determine API source based on console logs
-        // This is a simple heuristic and might not be 100% accurate
         setApiSource(data.length > 0 ? 'azure' : 'local');
         
-        // Check if we're using cached data by looking at console logs
-        // This is a bit of a hack, but it works for demonstration purposes
         const recentLogs = getRecentConsoleLogs();
         if (recentLogs.includes('Using cached properties data')) {
           setCacheStatus('cached');
@@ -50,8 +45,6 @@ export function SearchPage() {
     fetchProperties();
   }, []);
 
-  // Helper function to check recent console logs
-  // This is a workaround since we can't directly access the cache status from the API service
   const getRecentConsoleLogs = (): string => {
     const originalConsoleLog = console.log;
     let lastLog = '';
@@ -63,7 +56,6 @@ export function SearchPage() {
       originalConsoleLog.apply(console, args);
     };
     
-    // Restore original console.log after a short delay
     setTimeout(() => {
       console.log = originalConsoleLog;
     }, 100);
@@ -77,7 +69,6 @@ export function SearchPage() {
       const filteredProperties = await searchProperties(filters);
       setProperties(Array.isArray(filteredProperties) ? filteredProperties : []);
       
-      // Check if we're using cached data by looking at console logs
       const recentLogs = getRecentConsoleLogs();
       if (recentLogs.includes('Using cached search results')) {
         setCacheStatus('cached');
@@ -102,42 +93,7 @@ export function SearchPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-                <Search className="h-8 w-8 text-primary" />
-                <h1 className="ml-2 text-2xl font-bold text-primary">CloseBy</h1>
-              </div>
-              <p className="mt-1 text-sm text-secondary-light">Find places of interest near your property</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/search-amenities')}
-                className={`${styles.searchButton} !bg-secondary hover:!bg-secondary-light`}
-              >
-                <Navigation className="w-5 h-5 mr-2" />
-                Search Amenities
-              </button>
-              <button
-                onClick={() => navigate('/upload-amenity')}
-                className={`${styles.searchButton} !bg-secondary hover:!bg-secondary-light`}
-              >
-                <Building2 className="w-5 h-5 mr-2" />
-                Add Amenity
-              </button>
-              <button
-                onClick={() => navigate('/upload-property')}
-                className={styles.searchButton}
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Add Property
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="space-y-8">

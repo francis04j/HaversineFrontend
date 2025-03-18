@@ -7,8 +7,13 @@ import { getCache, setCache, CACHE_KEYS, isLocationData } from '../utils/cache';
 // API URL
 const azureBaseURL = 'https://app-250213181732.azurewebsites.net/api';
 
-// Create axios instance
-const azureApi = axios.create({ baseURL: azureBaseURL });
+// Create axios instance with default headers
+const azureApi = axios.create({ 
+  baseURL: azureBaseURL,
+  headers: {
+    'X-CLOSEBY-API-KEY': 'ApiKey-YOUR_SECRET_API_KEY'
+  }
+});
 
 // Cache keys for properties
 const PROPERTIES_CACHE_KEYS = {
